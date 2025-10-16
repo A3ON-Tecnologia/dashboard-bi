@@ -401,12 +401,48 @@
         }
         
         // Preparar datasets
-        const labels = chartData.labels || [];
-        const series = chartData.series || [];
+        let labels = chartData.labels || [];
+        let series = chartData.series || [];
         
         // Detectar se há valores monetários
         const hasCurrencyValues = series.some(s => s.value_kind === 'currency');
         const hasPercentageValues = series.some(s => s.value_kind === 'percentage');
+        
+        // Para gráficos de linha e área com múltiplas métricas de período, combinar em uma única série temporal
+        if ((chartType === 'line' || chartType === 'area') && series.length > 1) {
+            const periodMetrics = series.filter(s => 
+                s.key === 'valor_periodo_1' || 
+                s.key === 'valor_periodo_2' || 
+                s.label?.toLowerCase().includes('período') ||
+                s.label?.toLowerCase().includes('periodo')
+            );
+            
+            // Se todas as séries são métricas de período, combinar em uma única linha temporal
+            if (periodMetrics.length === series.length && periodMetrics.length > 1) {
+                // Criar labels temporais (períodos)
+                const temporalLabels = periodMetrics.map(s => s.label);
+                
+                // Para cada indicador original, criar uma série temporal
+                const numIndicators = labels.length;
+                const combinedSeries = [];
+                
+                for (let i = 0; i < numIndicators; i++) {
+                    const indicatorLabel = labels[i];
+                    const temporalValues = periodMetrics.map(metric => metric.values[i]);
+                    
+                    combinedSeries.push({
+                        label: indicatorLabel,
+                        values: temporalValues,
+                        color: COLOR_PALETTE[i % COLOR_PALETTE.length],
+                        value_kind: periodMetrics[0].value_kind || 'number'
+                    });
+                }
+                
+                // Atualizar labels e series
+                labels = temporalLabels;
+                series = combinedSeries;
+            }
+        }
         
         const datasets = series.map(s => {
             const dataset = {
@@ -1114,6 +1150,19 @@
                     borderColor: colors.map(c => c),
                     borderWidth: 2
                 }];
+            } else if ((config.type === 'line' || config.type === 'area') && config.metrics.length > 1) {
+                // Para linha/área com múltiplos períodos, criar séries temporais
+                const temporalLabels = config.metrics.map(m => m.label);
+                
+                datasets = config.indicators.map((indicator, i) => ({
+                    label: indicator,
+                    data: config.metrics.map(() => Math.random() * 1000),
+                    backgroundColor: COLOR_PALETTE[i % COLOR_PALETTE.length],
+                    borderColor: COLOR_PALETTE[i % COLOR_PALETTE.length],
+                    borderWidth: 2
+                }));
+                
+                labels = temporalLabels;
             } else {
                 datasets = config.metrics.map(metric => ({
                     label: metric.label,

@@ -252,9 +252,66 @@
 
     function updateCategoryUI(elements, dataset) {
         const { statusLabel, deleteButton, viewButton, tableContainer } = elements;
+        
+        // Obter o card da categoria
+        const card = statusLabel?.closest('[data-category]');
+        const hasUpload = Boolean(dataset?.upload?.id);
+        
         if (statusLabel) {
             statusLabel.textContent = dataset ? 'com dados' : 'aguardando upload';
         }
+        
+        // Atualizar bordas e ícone de check
+        if (card) {
+            card.dataset.hasUpload = hasUpload ? 'true' : 'false';
+            
+            if (hasUpload) {
+                // Adicionar borda verde
+                card.classList.remove('border-white/10');
+                card.classList.add('border-green-500/60');
+                
+                // Adicionar ícone de check se não existir
+                let checkIcon = card.querySelector('[data-check-icon]');
+                if (!checkIcon) {
+                    checkIcon = document.createElement('div');
+                    checkIcon.setAttribute('data-check-icon', '');
+                    checkIcon.className = 'w-6 h-6 rounded-full bg-green-500/20 border border-green-500/60 flex items-center justify-center flex-shrink-0';
+                    checkIcon.innerHTML = `
+                        <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    `;
+                    
+                    // Inserir o ícone ao lado do título
+                    const titleContainer = card.querySelector('.flex.items-center.justify-between > div:first-child');
+                    if (titleContainer) {
+                        // Transformar em flex container se ainda não for
+                        if (!titleContainer.classList.contains('flex')) {
+                            titleContainer.classList.add('flex', 'items-center', 'gap-2');
+                        }
+                        // Inserir o ícone como primeiro elemento
+                        titleContainer.insertBefore(checkIcon, titleContainer.firstChild);
+                    }
+                }
+            } else {
+                // Remover borda verde
+                card.classList.remove('border-green-500/60');
+                card.classList.add('border-white/10');
+                
+                // Remover ícone de check
+                const checkIcon = card.querySelector('[data-check-icon]');
+                if (checkIcon) {
+                    checkIcon.remove();
+                }
+                
+                // Remover classes flex do container do título se necessário
+                const titleContainer = card.querySelector('.flex.items-center.justify-between > div:first-child');
+                if (titleContainer && titleContainer.children.length === 1) {
+                    titleContainer.classList.remove('flex', 'items-center', 'gap-2');
+                }
+            }
+        }
+        
         if (deleteButton) {
             if (dataset?.upload?.id) {
                 deleteButton.dataset.uploadId = dataset.upload.id;
