@@ -1,0 +1,110 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ workflow.nome }} · Dados{% endblock %}
+
+{% block content %}
+<section class="space-y-10">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+            <p class="text-sm uppercase tracking-wide opacity-60">{{ workflow.tipo.replace('_', ' ') }}</p>
+            <h1 class="text-3xl font-semibold">{{ workflow.nome }}</h1>
+            {% if workflow.descricao %}
+            <p class="text-sm opacity-70 mt-2 max-w-3xl">{{ workflow.descricao }}</p>
+            {% endif %}
+        </div>
+        <div class="flex flex-wrap gap-3">
+            <a href="{{ url_for('web.workflow_charts_view', workflow_id=workflow.id) }}" class="px-4 py-2 rounded-lg border border-white/15 hover:border-white/40 transition text-sm">Ir para dashboards</a>
+            <a href="{{ url_for('web.list_workflows_view') }}" class="px-4 py-2 rounded-lg border border-white/15 hover:border-white/40 transition text-sm">Voltar</a>
+        </div>
+    </div>
+
+    {% if workflow.tipo == 'balancete' %}
+    <div class="grid lg:grid-cols-[1.2fr_1fr] gap-6">
+        <div class="rounded-2xl border border-white/10 bg-white/5 backdrop-blur px-6 py-6 space-y-5">
+            <div class="flex items-center justify-between gap-3">
+                <div>
+                    <h2 class="text-xl font-semibold">Upload do balancete</h2>
+                    <p class="text-sm opacity-70">Envie a planilha com colunas <em>Indicadores</em>, <em>Período 1</em>, <em>Período 2</em>, <em>Diferença Absoluta</em> e <em>Diferença %</em>.</p>
+                </div>
+                <button id="deleteBalanceteUpload" class="hidden px-3 py-2 rounded-lg border border-red-400/40 text-red-200 hover:border-red-400 hover:text-red-100 transition text-sm" data-upload-id="">
+                    Remover upload
+                </button>
+            </div>
+            <form id="balanceteUploadForm" class="grid gap-3" enctype="multipart/form-data">
+                <label class="grid gap-2 text-sm">
+                    <span class="font-medium opacity-80">Selecionar arquivo</span>
+                    <input type="file" name="arquivo" accept=".csv,.xlsx" required class="rounded-lg border border-dashed border-white/30 px-3 py-2 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500/60" />
+                </label>
+                <button type="submit" class="px-4 py-2 rounded-lg {{ theme.buttons.primary }} text-sm font-medium">
+                    Enviar arquivo
+                </button>
+                <p id="balanceteUploadFeedback" class="text-sm opacity-70 hidden"></p>
+            </form>
+        </div>
+        <div class="rounded-2xl border border-white/10 bg-white/5 backdrop-blur px-6 py-6 space-y-4" id="balanceteSummary">
+            <h3 class="text-lg font-semibold">Resumo</h3>
+            <ul class="text-sm opacity-80 space-y-2">
+                <li><strong>Período 1:</strong> <span data-periodo-1>-</span></li>
+                <li><strong>Período 2:</strong> <span data-periodo-2>-</span></li>
+                <li><strong>Indicadores carregados:</strong> <span data-indicadores-total>0</span></li>
+                <li class="text-xs opacity-60">Após o upload, os indicadores ficam disponíveis para criação dos gráficos.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="rounded-2xl border border-white/10 bg-white/5 backdrop-blur px-6 py-6">
+        <div class="flex items-center justify-between gap-3 mb-4">
+            <h2 class="text-xl font-semibold">Pré-visualização dos dados</h2>
+            <span class="text-sm opacity-60" data-upload-name></span>
+        </div>
+        <div class="overflow-x-auto scrollbar-thin" id="balanceteTableWrapper">
+            <p class="text-sm opacity-70">Nenhum arquivo foi enviado ainda.</p>
+        </div>
+    </div>
+    {% else %}
+    <div class="rounded-2xl border border-white/10 bg-white/5 backdrop-blur px-6 py-6 space-y-8">
+        <div>
+            <h2 class="text-xl font-semibold">Categorias de upload</h2>
+            <p class="text-sm opacity-70">Cada categoria possui um CSV independente. Faça o upload em cada bloco para liberar a visualização das tabelas e a criação de gráficos.</p>
+        </div>
+        <div class="grid gap-6 xl:grid-cols-2" id="analiseCategoryList">
+            {% for categoria in workflow.analise_jp.categories %}
+            <article class="rounded-xl border border-white/10 bg-black/10 backdrop-blur px-5 py-5 space-y-5" data-category="{{ categoria.slug }}">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <h3 class="text-lg font-semibold">{{ categoria.label }}</h3>
+                        <p class="text-xs opacity-70">Status: <span class="font-medium" data-category-status>{{ 'com dados' if categoria.has_upload else 'aguardando upload' }}</span></p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="px-3 py-2 rounded-lg border border-white/15 hover:border-white/40 transition text-xs" data-action="view-table" {% if not categoria.has_upload %}disabled class="opacity-40 cursor-not-allowed px-3 py-2 rounded-lg border border-white/10 text-xs"{% endif %}>
+                            Ver tabela
+                        </button>
+                        <button class="hidden px-3 py-2 rounded-lg border border-red-400/40 text-red-200 hover:border-red-400 hover:text-red-100 transition text-xs" data-action="delete-upload" data-upload-id="">
+                            Remover
+                        </button>
+                    </div>
+                </div>
+                <form class="grid gap-3" data-category-upload-form>
+                    <input type="hidden" name="categoria" value="{{ categoria.slug }}" />
+                    <label class="grid gap-2 text-sm">
+                        <span class="font-medium opacity-80">Arquivo CSV/XLSX</span>
+                        <input type="file" name="arquivo" accept=".csv,.xlsx" required class="rounded-lg border border-dashed border-white/30 px-3 py-2 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500/60" />
+                    </label>
+                    <button type="submit" class="px-3 py-2 rounded-lg border border-white/15 hover:border-white/40 transition text-xs font-medium">Enviar arquivo</button>
+                    <p class="text-xs opacity-70 hidden" data-feedback></p>
+                </form>
+                <div class="hidden" data-category-table></div>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    window.__WORKFLOW__ = {{ workflow|tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/workflow_detail.js') }}"></script>
+{% endblock %}

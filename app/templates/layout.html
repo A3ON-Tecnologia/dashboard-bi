@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}Dashboards{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+        .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+        .scrollbar-thin::-webkit-scrollbar-thumb { border-radius: 9999px; }
+    </style>
+</head>
+<body class="{{ theme.bg }} {{ theme.text }} min-h-screen">
+    <div class="flex min-h-screen">
+        <aside class="fixed inset-y-0 left-0 w-64 {{ theme.navbar }} flex flex-col justify-between">
+            <div>
+                <div class="px-6 py-6 flex items-center gap-3">
+                    <div class="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
+                        DW
+                    </div>
+                    <div>
+                        <p class="text-sm uppercase tracking-wide opacity-60">Workflow</p>
+                        <p class="font-semibold text-lg">Dashboard Suite</p>
+                    </div>
+                </div>
+                <nav class="px-4 space-y-1 mt-4">
+                    <a href="{{ url_for('web.list_workflows_view') }}" class="group flex items-center gap-3 px-3 py-2 rounded-lg transition {{ theme.buttons.primary if request.endpoint == 'web.list_workflows_view' else 'hover:bg-white/10' }}">
+                        <span class="w-2 h-2 rounded-full {% if request.endpoint == 'web.list_workflows_view' %}bg-white{% else %}bg-white/50 group-hover:bg-white{% endif %}"></span>
+                        <span class="font-medium">Workflows</span>
+                    </a>
+                    {% if workflow %}
+                    <a href="{{ url_for('web.workflow_detail_view', workflow_id=workflow.id) }}" class="group flex items-center gap-3 px-3 py-2 rounded-lg transition {{ theme.buttons.primary if request.endpoint == 'web.workflow_detail_view' else 'hover:bg-white/10' }}">
+                        <span class="w-2 h-2 rounded-full {% if request.endpoint == 'web.workflow_detail_view' %}bg-white{% else %}bg-white/50 group-hover:bg-white{% endif %}"></span>
+                        <span class="font-medium">Dados do Workflow</span>
+                    </a>
+                    <a href="{{ url_for('web.workflow_charts_view', workflow_id=workflow.id) }}" class="group flex items-center gap-3 px-3 py-2 rounded-lg transition {{ theme.buttons.primary if request.endpoint == 'web.workflow_charts_view' else 'hover:bg-white/10' }}">
+                        <span class="w-2 h-2 rounded-full {% if request.endpoint == 'web.workflow_charts_view' %}bg-white{% else %}bg-white/50 group-hover:bg-white{% endif %}"></span>
+                        <span class="font-medium">Dashboards</span>
+                    </a>
+                    {% endif %}
+                </nav>
+            </div>
+            <div class="px-6 py-6 border-t border-white/10 space-y-4">
+                <div>
+                    <p class="text-sm opacity-60 mb-2">Tema atual</p>
+                    <button id="themeTrigger" class="w-full rounded-lg px-3 py-2 border border-white/10 text-left hover:border-white/30 transition">
+                        <p class="text-sm font-medium">{{ theme.name|capitalize }}</p>
+                        <p class="text-xs opacity-60">Clique para trocar</p>
+                    </button>
+                </div>
+                <p class="text-xs opacity-60">Configurações aplicadas globalmente.</p>
+            </div>
+        </aside>
+        <main class="flex-1 min-h-screen overflow-y-auto scrollbar-thin ml-64">
+            <div class="max-w-7xl mx-auto px-6 py-10">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <div id="themeModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden z-50">
+        <div class="w-full h-full flex items-center justify-center p-6">
+            <div class="max-w-lg w-full {{ theme.modal }} rounded-2xl shadow-2xl border border-white/10">
+                <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between">
+                    <h2 class="text-lg font-semibold">Escolher tema</h2>
+                    <button class="p-2 rounded-lg hover:bg-white/10" data-theme-close>
+                        ✕
+                    </button>
+                </div>
+                <div class="px-6 py-6 grid gap-4">
+                    {% for option in theme_options %}
+                    <button class="flex items-center justify-between px-4 py-3 rounded-xl border border-white/10 hover:border-white/40 transition" data-theme-choice="{{ option.slug }}">
+                        <div>
+                            <p class="font-medium">{{ option.label }}</p>
+                            <p class="text-xs opacity-60">Aplicar cores do tema {{ option.label }}</p>
+                        </div>
+                        <div class="flex gap-1">
+                            <span class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 opacity-70"></span>
+                            <span class="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-sky-500 opacity-70"></span>
+                            <span class="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500 to-rose-500 opacity-70"></span>
+                        </div>
+                    </button>
+                    {% endfor %}
+                </div>
+                <div class="px-6 py-4 border-t border-white/10 text-right">
+                    <button class="px-4 py-2 rounded-lg border border-white/20 hover:border-white/40 transition" data-theme-close>
+                        Fechar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.__THEME__ = {{ theme|tojson }};
+        window.__THEME_OPTIONS__ = {{ theme_options|tojson }};
+    </script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

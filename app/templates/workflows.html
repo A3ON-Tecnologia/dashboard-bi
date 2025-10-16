@@ -1,0 +1,100 @@
+{% extends "layout.html" %}
+
+{% block title %}Workflows{% endblock %}
+
+{% block content %}
+<section class="space-y-8">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <div>
+            <p class="text-sm opacity-70">Orquestre extrações e dashboards em um único fluxo.</p>
+            <h1 class="text-3xl font-semibold mt-1">Workflows</h1>
+        </div>
+        <a href="https://www.flask.dev" target="_blank" class="inline-flex items-center gap-2 text-sm opacity-70 hover:opacity-100 transition">
+            <span>Documentação</span>
+            <span aria-hidden="true">↗</span>
+        </a>
+    </div>
+
+    <div class="grid lg:grid-cols-2 gap-6">
+        <div class="rounded-2xl border border-white/10 bg-white/5 backdrop-blur px-6 py-6 space-y-5">
+            <div>
+                <h2 class="text-xl font-semibold">Criar novo workflow</h2>
+                <p class="text-sm opacity-70">Selecione o tipo desejado e comece importando seus dados.</p>
+            </div>
+
+            <form id="createWorkflowForm" class="grid gap-4">
+                <label class="grid gap-2">
+                    <span class="text-sm font-medium opacity-80">Nome do workflow</span>
+                    <input type="text" name="nome" required maxlength="255" class="rounded-lg border border-white/20 bg-transparent px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/60" placeholder="Ex.: Balancete Mensal" />
+                </label>
+                <label class="grid gap-2">
+                    <span class="text-sm font-medium opacity-80">Descrição</span>
+                    <textarea name="descricao" rows="3" class="rounded-lg border border-white/20 bg-transparent px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/60" placeholder="Objetivo e contexto do workflow"></textarea>
+                </label>
+                <label class="grid gap-2">
+                    <span class="text-sm font-medium opacity-80">Tipo</span>
+                    <select name="tipo" required class="rounded-lg border border-white/20 bg-transparent px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/60">
+                        <option value="">Selecione...</option>
+                        <option value="balancete">Balancete</option>
+                        <option value="analise_jp">Análise JP</option>
+                    </select>
+                </label>
+                <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 font-medium {{ theme.buttons.primary }}">
+                    Criar workflow
+                </button>
+                <p id="createWorkflowFeedback" class="text-sm opacity-70 hidden"></p>
+            </form>
+        </div>
+
+        <div class="rounded-2xl border border-white/10 bg-white/5 backdrop-blur px-6 py-6 h-fit">
+            <h2 class="text-xl font-semibold mb-4">Como funciona</h2>
+            <ol class="space-y-3 text-sm opacity-80 leading-relaxed">
+                <li><strong>1.</strong> Crie um workflow e escolha se ele é do tipo Balancete ou Análise JP.</li>
+                <li><strong>2.</strong> Faça upload das planilhas para liberar a visualização dos dados.</li>
+                <li><strong>3.</strong> Construa dashboards dinâmicos, definindo indicadores, métricas e estilos.</li>
+                <li><strong>4.</strong> Ajuste ou substitua uploads a qualquer momento, mantendo o histórico sempre atualizado.</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="rounded-2xl border border-white/10 bg-white/5 backdrop-blur px-6 py-6">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+            <div>
+                <h2 class="text-xl font-semibold">Meus workflows</h2>
+                <p class="text-sm opacity-70">{{ workflows|length }} workflow(s) encontrados.</p>
+            </div>
+            <div class="flex gap-2 text-sm opacity-70">
+                <span class="px-2 py-1 rounded-full border border-white/15">Balancete</span>
+                <span class="px-2 py-1 rounded-full border border-white/15">Análise JP</span>
+            </div>
+        </div>
+
+        <div id="workflowList" class="grid gap-4">
+            {% for item in workflows %}
+            <article class="rounded-xl border border-white/10 bg-black/10 backdrop-blur px-5 py-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                    <p class="text-sm uppercase tracking-wide opacity-60">{{ item.tipo.replace('_', ' ') }}</p>
+                    <h3 class="text-lg font-semibold">{{ item.nome }}</h3>
+                    <p class="text-sm opacity-70">{{ item.descricao or 'Sem descrição informada.' }}</p>
+                </div>
+                <div class="flex flex-wrap gap-3">
+                    <a href="{{ url_for('web.workflow_detail_view', workflow_id=item.id) }}" class="px-4 py-2 rounded-lg border border-white/15 hover:border-white/40 transition text-sm">Abrir</a>
+                    <button data-action="delete-workflow" data-workflow-id="{{ item.id }}" class="px-4 py-2 rounded-lg border border-red-400/40 text-red-200 hover:border-red-400 hover:text-red-100 transition text-sm">
+                        Excluir
+                    </button>
+                </div>
+            </article>
+            {% else %}
+            <p class="text-sm opacity-70">Nenhum workflow cadastrado até o momento.</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    window.__WORKFLOWS__ = {{ workflows|tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/workflows.js') }}"></script>
+{% endblock %}
