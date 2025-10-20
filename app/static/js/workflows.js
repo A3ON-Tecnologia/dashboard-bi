@@ -53,10 +53,7 @@
         const payload = Object.fromEntries(formData.entries());
 
         try {
-            const response = await apiRequest('/api/workflows', {
-                method: 'POST',
-                body: payload,
-            });
+            const response = await apiRequest('/api/workflows', 'POST', payload);
             if (response?.workflow) {
                 state.workflows.unshift(response.workflow);
                 renderList();
@@ -81,7 +78,7 @@
         if (!confirmed) return;
 
         try {
-            await apiRequest(`/api/workflows/${workflowId}`, { method: 'DELETE' });
+            await apiRequest(`/api/workflows/${workflowId}`, 'DELETE');
             state.workflows = state.workflows.filter((item) => item.id !== workflowId);
             renderList();
         } catch (error) {

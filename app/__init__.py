@@ -1,6 +1,5 @@
 from pathlib import Path
-from datetime import timezone
-from zoneinfo import ZoneInfo
+from datetime import timezone, timedelta
 
 from flask import Flask
 from flask_migrate import Migrate
@@ -8,7 +7,8 @@ from flask_migrate import Migrate
 from config import Config
 from app.extensions import db
 
-SAO_PAULO_TZ = ZoneInfo("America/Sao_Paulo")
+# Criar timezone de São Paulo manualmente (UTC-3)
+SAO_PAULO_TZ = timezone(timedelta(hours=-3))
 UTC = timezone.utc
 
 

@@ -11,6 +11,57 @@
         ChartJs.register(window.ChartDataLabels);
     }
 
+    // Plugin para efeito neon nas barras
+    const neonGlowPlugin = {
+        id: 'neonGlow',
+        beforeDatasetsDraw: (chart) => {
+            const ctx = chart.ctx;
+            chart.data.datasets.forEach((dataset, datasetIndex) => {
+                if (dataset.shadowBlur && (chart.config.type === 'bar')) {
+                    const meta = chart.getDatasetMeta(datasetIndex);
+                    if (!meta.hidden) {
+                        ctx.save();
+                        ctx.shadowBlur = dataset.shadowBlur;
+                        ctx.shadowColor = dataset.shadowColor || dataset.backgroundColor;
+                        meta.data.forEach((bar) => {
+                            const { x, y, base, width, height } = bar.getProps(['x', 'y', 'base', 'width', 'height'], true);
+                            ctx.fillStyle = dataset.backgroundColor;
+                            
+                            // Desenhar retângulo com bordas arredondadas
+                            const borderRadius = dataset.borderRadius || 0;
+                            ctx.beginPath();
+                            
+                            if (chart.config.options.indexAxis === 'y') {
+                                // Barras horizontais
+                                const barHeight = height;
+                                const barWidth = x - base;
+                                const startX = base;
+                                const startY = y - barHeight / 2;
+                                
+                                ctx.roundRect(startX, startY, barWidth, barHeight, borderRadius);
+                            } else {
+                                // Barras verticais
+                                const barWidth = width;
+                                const barHeight = base - y;
+                                const startX = x - barWidth / 2;
+                                const startY = y;
+                                
+                                ctx.roundRect(startX, startY, barWidth, barHeight, borderRadius);
+                            }
+                            
+                            ctx.fill();
+                        });
+                        ctx.restore();
+                    }
+                }
+            });
+        }
+    };
+
+    if (ChartJs && ChartJs.register) {
+        ChartJs.register(neonGlowPlugin);
+    }
+
     const COLOR_PALETTE = [
         '#4ade80',
         '#38bdf8',
@@ -23,6 +74,98 @@
         '#34d399',
         '#60a5fa',
     ];
+
+    // Estado global para tooltip fixo
+    let pinnedTooltip = null;
+
+    // Função para criar tooltip HTML customizado
+    function createCustomTooltip(chart, point) {
+        // Remover tooltip anterior se existir
+        removeCustomTooltip();
+
+        const tooltip = document.createElement('div');
+        tooltip.id = 'custom-chart-tooltip';
+        tooltip.style.cssText = `
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            pointer-events: auto;
+            z-index: 9999;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            min-width: 200px;
+        `;
+
+        // Extrair informações do ponto clicado
+        const datasetIndex = point.datasetIndex;
+        const dataIndex = point.index;
+        const dataset = chart.data.datasets[datasetIndex];
+        const label = dataset.label || '';
+        const value = dataset.data[dataIndex];
+        const valueKind = dataset.valueKind || 'number';
+        const indicatorLabel = chart.data.labels[dataIndex];
+        
+        let formattedValue = '';
+        if (valueKind === 'currency') {
+            formattedValue = formatCurrency(value);
+        } else if (valueKind === 'percentage') {
+            formattedValue = formatPercentage(value);
+        } else {
+            formattedValue = value !== null ? value.toLocaleString('pt-BR', { maximumFractionDigits: 2 }) : '';
+        }
+
+        tooltip.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: start; gap: 16px;">
+                <div>
+                    <div style="font-size: 16px; margin-bottom: 4px;">${indicatorLabel}</div>
+                    <div style="font-size: 14px;">${label}: ${formattedValue}</div>
+                </div>
+                <button id="close-tooltip" style="
+                    background: transparent;
+                    border: none;
+                    color: white;
+                    font-size: 20px;
+                    cursor: pointer;
+                    padding: 0;
+                    line-height: 1;
+                    width: 24px;
+                    height: 24px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                ">×</button>
+            </div>
+        `;
+
+        document.body.appendChild(tooltip);
+
+        // Posicionar tooltip
+        const canvasRect = chart.canvas.getBoundingClientRect();
+        const tooltipRect = tooltip.getBoundingClientRect();
+        
+        // Calcular posição (acima e centralizado com a barra)
+        const element = chart.getDatasetMeta(datasetIndex).data[dataIndex];
+        const x = canvasRect.left + element.x;
+        const y = canvasRect.top + element.y;
+        
+        tooltip.style.left = (x - tooltipRect.width / 2) + 'px';
+        tooltip.style.top = (y - tooltipRect.height - 10) + 'px';
+
+        // Adicionar evento de fechar
+        document.getElementById('close-tooltip').addEventListener('click', removeCustomTooltip);
+
+        pinnedTooltip = tooltip;
+    }
+
+    function removeCustomTooltip() {
+        if (pinnedTooltip) {
+            pinnedTooltip.remove();
+            pinnedTooltip = null;
+        }
+    }
 
     const CHART_TYPES = [
         { type: 'bar', label: 'Barras verticais', description: 'Comparacao entre categorias com colunas.' },
@@ -376,6 +519,16 @@
         try {
             const instance = new ChartJs(ctx, chartData);
             state.chartInstances.set(index, instance);
+            
+            // Adicionar evento de clique para fixar tooltip
+            container.onclick = (evt) => {
+                const points = instance.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true);
+                if (points.length) {
+                    const firstPoint = points[0];
+                    createCustomTooltip(instance, firstPoint);
+                }
+            };
+            
             console.log('Gráfico', index, 'renderizado com sucesso');
         } catch (error) {
             console.error('Erro ao renderizar gráfico', index, error);
@@ -383,8 +536,6 @@
     }
 
     function prepareChartData(chart) {
-        console.log('Preparando dados do gráfico:', chart);
-        
         // Extrair dados do chart (pode vir em formatos diferentes)
         const chartData = chart.data || {};
         const chartConfig = chart.config || chart.chart || chart;
@@ -403,6 +554,8 @@
         // Preparar datasets
         let labels = chartData.labels || [];
         let series = chartData.series || [];
+        
+        console.log('Series recebidas do backend:', series);
         
         // Detectar se há valores monetários
         const hasCurrencyValues = series.some(s => s.value_kind === 'currency');
@@ -444,12 +597,52 @@
             }
         }
         
-        const datasets = series.map(s => {
+        // Para gráficos de barras horizontais: Eixo Y = Indicadores, Legenda = Métricas
+        // Para gráficos de barras verticais: Eixo X = Períodos, Legenda = Indicadores
+        if (chartType === 'bar-horizontal' && series.length > 0) {
+            // Barras horizontais: manter estrutura original
+            // labels = indicadores (eixo Y)
+            // series = métricas (legenda), cada uma com valores por indicador
+            // Não precisa transformar, já está no formato correto
+        } else if (chartType === 'bar' && series.length > 1) {
+            // Barras verticais: INVERTER para mostrar indicadores no eixo X e períodos na legenda
+            const periodMetrics = series.filter(s => 
+                s.key === 'valor_periodo_1' || 
+                s.key === 'valor_periodo_2' || 
+                s.label?.toLowerCase().includes('período') ||
+                s.label?.toLowerCase().includes('periodo')
+            );
+            
+            // Se todas as séries são métricas de período, reorganizar
+            if (periodMetrics.length === series.length && periodMetrics.length > 1) {
+                const indicatorLabels = labels; // Indicadores vão para o eixo X
+                const combinedSeries = [];
+                
+                // Para cada PERÍODO, criar uma série com valores de todos os INDICADORES
+                periodMetrics.forEach((metric, metricIndex) => {
+                    combinedSeries.push({
+                        label: metric.label, // Nome do período na legenda (2024, 2025)
+                        values: metric.values, // Valores de todos os indicadores para este período
+                        color: metric.color || COLOR_PALETTE[metricIndex % COLOR_PALETTE.length], // Usar cor escolhida
+                        value_kind: metric.value_kind || 'number'
+                    });
+                });
+                
+                // Atualizar labels (eixo X = indicadores) e series (legenda = períodos)
+                labels = indicatorLabels;
+                series = combinedSeries;
+            }
+        }
+        
+        const datasets = series.map((s, index) => {
+            const color = s.color || COLOR_PALETTE[index % COLOR_PALETTE.length];
+            console.log(`Dataset ${index}: label="${s.label}", color from backend="${s.color}", final color="${color}"`);
+            
             const dataset = {
                 label: s.label,
                 data: s.values || [],
-                backgroundColor: s.color || COLOR_PALETTE[0],
-                borderColor: s.color || COLOR_PALETTE[0],
+                backgroundColor: color,
+                borderColor: color,
                 borderWidth: 2,
                 valueKind: s.value_kind || 'number' // Armazenar tipo do valor
             };
@@ -460,6 +653,13 @@
             } else if (chartType === 'line') {
                 dataset.fill = false;
                 dataset.tension = 0.4;
+            } else if (chartType === 'bar' || chartType === 'bar-horizontal') {
+                dataset.borderRadius = 8;
+                dataset.borderSkipped = false;
+                dataset.borderWidth = 3;
+                // Efeito neon com sombra brilhante
+                dataset.shadowBlur = 20;
+                dataset.shadowColor = color;
             }
             
             return dataset;
@@ -476,9 +676,27 @@
                     legend: { 
                         display: true, 
                         position: 'top',
-                        labels: { color: 'rgba(255,255,255,0.9)' }
+                        labels: { 
+                            color: 'rgba(255,255,255,0.9)',
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            }
+                        }
                     },
                     tooltip: {
+                        position: 'average',
+                        yAlign: 'bottom',
+                        xAlign: 'center',
+                        bodyFont: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        titleFont: {
+                            size: 16,
+                            weight: 'bold'
+                        },
+                        padding: 12,
                         callbacks: {
                             label: function(context) {
                                 let label = context.dataset.label || '';
@@ -486,7 +704,11 @@
                                     label += ': ';
                                 }
                                 
-                                const value = context.parsed.y !== undefined ? context.parsed.y : context.parsed;
+                                // Para barras horizontais, o valor está em parsed.x
+                                // Para outros gráficos, está em parsed.y
+                                const value = chartType === 'bar-horizontal' 
+                                    ? context.parsed.x 
+                                    : (context.parsed.y !== undefined ? context.parsed.y : context.parsed);
                                 const valueKind = context.dataset.valueKind || 'number';
                                 
                                 if (valueKind === 'currency') {
@@ -504,24 +726,24 @@
                     datalabels: { 
                         display: chartConfig.options?.dataLabels !== false,
                         color: '#fff',
-                        font: { weight: 'bold', size: 10 },
+                        font: { weight: 'bold', size: 14 },
                         formatter: (value, context) => {
                             if (value === null || value === undefined) return '';
                             
                             const valueKind = context.dataset.valueKind || 'number';
                             
                             if (valueKind === 'currency') {
-                                // Formato compacto para moeda
+                                // Formato compacto para moeda (sem arredondamento)
                                 if (Math.abs(value) >= 1000000) {
-                                    return 'R$ ' + (value / 1000000).toFixed(1) + 'M';
+                                    return 'R$ ' + (value / 1000000).toFixed(2) + 'M';
                                 } else if (Math.abs(value) >= 1000) {
-                                    return 'R$ ' + (value / 1000).toFixed(1) + 'K';
+                                    return 'R$ ' + (value / 1000).toFixed(2) + 'K';
                                 }
-                                return 'R$ ' + value.toFixed(0);
+                                return 'R$ ' + value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                             } else if (valueKind === 'percentage') {
-                                return value.toFixed(1) + '%';
+                                return value.toFixed(2) + '%';
                             } else {
-                                return Math.round(value).toLocaleString('pt-BR');
+                                return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                             }
                         }
                     }
@@ -530,34 +752,62 @@
                     x: { 
                         stacked: chartConfig.options?.stacked || false,
                         grid: { color: 'rgba(255,255,255,0.1)' },
-                        ticks: { color: 'rgba(255,255,255,0.7)' }
+                        ticks: { 
+                            color: '#ffffff',
+                            font: { size: 14, weight: 'bold' },
+                            callback: function(value) {
+                                // Para barras horizontais, eixo X tem os valores (formatar)
+                                if (chartType === 'bar-horizontal') {
+                                    if (hasCurrencyValues) {
+                                        if (Math.abs(value) >= 1000000) {
+                                            return 'R$ ' + (value / 1000000).toFixed(2) + 'M';
+                                        } else if (Math.abs(value) >= 1000) {
+                                            return 'R$ ' + (value / 1000).toFixed(2) + 'K';
+                                        }
+                                        return 'R$ ' + value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                    } else if (hasPercentageValues) {
+                                        return value.toFixed(2) + '%';
+                                    }
+                                    return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                }
+                                // Para outros gráficos (barras verticais), eixo X tem labels dos indicadores
+                                return this.getLabelForValue(value);
+                            }
+                        },
+                        beginAtZero: chartType === 'bar-horizontal'
                     },
                     y: { 
                         stacked: chartConfig.options?.stacked || false,
                         grid: { color: 'rgba(255,255,255,0.1)' },
                         ticks: { 
-                            color: 'rgba(255,255,255,0.7)',
-                            callback: function(value) {
-                                // Formatar eixo Y se houver valores monetários
+                            color: '#ffffff',
+                            font: { size: 14, weight: 'bold' },
+                            callback: function(value, index, ticks) {
+                                // Para barras horizontais, eixo Y tem os labels (retornar o label do array)
+                                if (chartType === 'bar-horizontal') {
+                                    // value é o índice, precisamos pegar o label correspondente
+                                    return this.getLabelForValue(value);
+                                }
+                                // Para outros gráficos, eixo Y tem valores (formatar)
                                 if (hasCurrencyValues) {
                                     if (Math.abs(value) >= 1000000) {
-                                        return 'R$ ' + (value / 1000000).toFixed(1) + 'M';
+                                        return 'R$ ' + (value / 1000000).toFixed(2) + 'M';
                                     } else if (Math.abs(value) >= 1000) {
-                                        return 'R$ ' + (value / 1000).toFixed(0) + 'K';
+                                        return 'R$ ' + (value / 1000).toFixed(2) + 'K';
                                     }
-                                    return 'R$ ' + value.toFixed(0);
+                                    return 'R$ ' + value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                                 } else if (hasPercentageValues) {
-                                    return value.toFixed(0) + '%';
+                                    return value.toFixed(2) + '%';
                                 }
-                                return value.toLocaleString('pt-BR');
+                                return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                             }
                         },
-                        beginAtZero: true
+                        beginAtZero: chartType !== 'bar-horizontal'
                     }
                 },
                 // Controlar espessura das barras
-                barPercentage: chartType === 'bar-horizontal' ? 0.5 : 0.5,
-                categoryPercentage: chartType === 'bar-horizontal' ? 0.6 : 0.7
+                barPercentage: chartType === 'bar-horizontal' ? 0.7 : 0.5,
+                categoryPercentage: chartType === 'bar-horizontal' ? 0.75 : 0.75
             }
         };
     }
@@ -1140,12 +1390,21 @@
             
             labels = config.indicators;
             
+            // Buscar valores reais do dataset
+            const getValueForIndicatorAndMetric = (indicator, metricKey) => {
+                if (!state.dataset || !state.dataset.records) return 0;
+                const record = state.dataset.records.find(r => r.indicador === indicator);
+                if (!record) return 0;
+                return record[metricKey] || 0;
+            };
+            
             // Para pizza/donut, usar cores diferentes para cada fatia
             if (config.type === 'pie' || config.type === 'donut') {
                 const colors = config.indicators.map((_, i) => COLOR_PALETTE[i % COLOR_PALETTE.length]);
+                const metricKey = config.metrics[0]?.key || 'valor_periodo_1';
                 datasets = [{
                     label: config.metrics[0]?.label || 'Valores',
-                    data: config.indicators.map(() => Math.random() * 1000),
+                    data: config.indicators.map(ind => getValueForIndicatorAndMetric(ind, metricKey)),
                     backgroundColor: colors,
                     borderColor: colors.map(c => c),
                     borderWidth: 2
@@ -1156,17 +1415,28 @@
                 
                 datasets = config.indicators.map((indicator, i) => ({
                     label: indicator,
-                    data: config.metrics.map(() => Math.random() * 1000),
+                    data: config.metrics.map(m => getValueForIndicatorAndMetric(indicator, m.key)),
                     backgroundColor: COLOR_PALETTE[i % COLOR_PALETTE.length],
                     borderColor: COLOR_PALETTE[i % COLOR_PALETTE.length],
                     borderWidth: 2
                 }));
                 
                 labels = temporalLabels;
+            } else if (config.type === 'bar' && config.metrics.length > 1) {
+                // Para barras VERTICAIS: períodos na legenda (com cores), indicadores no eixo X
+                labels = config.indicators; // Indicadores no eixo X
+                datasets = config.metrics.map(metric => ({
+                    label: metric.label, // Período na legenda (2024, 2025)
+                    data: config.indicators.map(ind => getValueForIndicatorAndMetric(ind, metric.key)),
+                    backgroundColor: metric.color, // Usar cor escolhida
+                    borderColor: metric.color,
+                    borderWidth: 2
+                }));
             } else {
+                // Para barras HORIZONTAIS e outros: manter estrutura original
                 datasets = config.metrics.map(metric => ({
                     label: metric.label,
-                    data: config.indicators.map(() => Math.random() * 1000),
+                    data: config.indicators.map(ind => getValueForIndicatorAndMetric(ind, metric.key)),
                     backgroundColor: metric.color,
                     borderColor: metric.color,
                     borderWidth: 2
@@ -1236,7 +1506,12 @@
                 processed.fill = false;
                 processed.tension = 0.4;
             } else if (config.type === 'bar' || config.type === 'bar-horizontal') {
-                processed.borderWidth = 1;
+                processed.borderWidth = 3;
+                processed.borderRadius = 8;
+                processed.borderSkipped = false;
+                // Efeito neon com sombra brilhante
+                processed.shadowBlur = 20;
+                processed.shadowColor = processed.backgroundColor;
             }
             
             return processed;
@@ -1253,15 +1528,71 @@
                     legend: { 
                         display: true, 
                         position: 'top',
-                        labels: { color: 'rgba(255,255,255,0.9)' }
+                        labels: { 
+                            color: 'rgba(255,255,255,0.9)',
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    tooltip: {
+                        position: 'average',
+                        yAlign: 'bottom',
+                        xAlign: 'center',
+                        bodyFont: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        titleFont: {
+                            size: 16,
+                            weight: 'bold'
+                        },
+                        padding: 12,
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                const value = config.type === 'bar-horizontal' 
+                                    ? context.parsed.x 
+                                    : (context.parsed.y !== undefined ? context.parsed.y : context.parsed);
+                                
+                                // Detectar tipo de valor pela métrica
+                                const metricKey = config.metrics?.[context.datasetIndex]?.key;
+                                if (metricKey === 'diferenca_percentual') {
+                                    label += formatPercentage(value);
+                                } else if (metricKey && metricKey !== 'diferenca_percentual') {
+                                    label += formatCurrency(value);
+                                } else {
+                                    label += value !== null ? value.toLocaleString('pt-BR', { maximumFractionDigits: 2 }) : '';
+                                }
+                                return label;
+                            }
+                        }
                     },
                     datalabels: { 
                         display: config.options.dataLabels,
                         color: '#fff',
-                        font: { weight: 'bold', size: 10 },
-                        formatter: (value) => {
+                        font: { weight: 'bold', size: 14 },
+                        formatter: (value, context) => {
                             if (value === null || value === undefined) return '';
-                            return Math.round(value).toLocaleString('pt-BR');
+                            
+                            // Detectar tipo de valor pela métrica
+                            const metricKey = config.metrics?.[context.datasetIndex]?.key;
+                            if (metricKey === 'diferenca_percentual') {
+                                return value.toFixed(2) + '%';
+                            } else if (metricKey && metricKey !== 'diferenca_percentual') {
+                                // Formato compacto para moeda (sem arredondamento)
+                                if (Math.abs(value) >= 1000000) {
+                                    return 'R$ ' + (value / 1000000).toFixed(2) + 'M';
+                                } else if (Math.abs(value) >= 1000) {
+                                    return 'R$ ' + (value / 1000).toFixed(2) + 'K';
+                                }
+                                return 'R$ ' + value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            }
+                            return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                         }
                     }
                 },
@@ -1269,24 +1600,69 @@
                     x: { 
                         stacked: config.options.stacked,
                         grid: { color: 'rgba(255,255,255,0.1)' },
-                        ticks: { color: 'rgba(255,255,255,0.7)' }
+                        ticks: { 
+                            color: '#ffffff',
+                            font: { size: 14, weight: 'bold' },
+                            callback: function(value) {
+                                // Para barras horizontais, eixo X tem valores (formatar)
+                                if (config.type === 'bar-horizontal') {
+                                    // Detectar se é percentual ou moeda
+                                    const hasPercentage = config.metrics?.some(m => m.key === 'diferenca_percentual');
+                                    const hasCurrency = config.metrics?.some(m => m.key !== 'diferenca_percentual');
+                                    
+                                    if (hasCurrency) {
+                                        if (Math.abs(value) >= 1000000) {
+                                            return 'R$ ' + (value / 1000000).toFixed(2) + 'M';
+                                        } else if (Math.abs(value) >= 1000) {
+                                            return 'R$ ' + (value / 1000).toFixed(2) + 'K';
+                                        }
+                                        return 'R$ ' + value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                    } else if (hasPercentage) {
+                                        return value.toFixed(2) + '%';
+                                    }
+                                }
+                                // Para outros gráficos (barras verticais), eixo X tem labels dos indicadores
+                                return this.getLabelForValue(value);
+                            }
+                        },
+                        beginAtZero: config.type === 'bar-horizontal'
                     },
                     y: { 
                         stacked: config.options.stacked,
                         grid: { color: 'rgba(255,255,255,0.1)' },
-                        ticks: { color: 'rgba(255,255,255,0.7)' },
-                        beginAtZero: true
+                        ticks: { 
+                            color: '#ffffff',
+                            font: { size: 14, weight: 'bold' },
+                            callback: function(value, index, ticks) {
+                                // Para barras horizontais, retornar o label correspondente
+                                if (config.type === 'bar-horizontal') {
+                                    return this.getLabelForValue(value);
+                                }
+                                return value;
+                            }
+                        },
+                        beginAtZero: config.type !== 'bar-horizontal'
                     }
                 },
                 // Controlar espessura das barras
-                barPercentage: config.type === 'bar-horizontal' ? 0.5 : 0.5,
-                categoryPercentage: config.type === 'bar-horizontal' ? 0.6 : 0.7
+                barPercentage: config.type === 'bar-horizontal' ? 0.65 : 0.45,
+                categoryPercentage: config.type === 'bar-horizontal' ? 0.7 : 0.7
             }
         };
         
         console.log('Configuração do gráfico:', chartConfig);
         try {
             state.previewInstance = new ChartJs(ctx, chartConfig);
+            
+            // Adicionar evento de clique para fixar tooltip no preview
+            chartPreviewCanvas.onclick = (evt) => {
+                const points = state.previewInstance.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true);
+                if (points.length) {
+                    const firstPoint = points[0];
+                    createCustomTooltip(state.previewInstance, firstPoint);
+                }
+            };
+            
             console.log('Gráfico criado com sucesso!');
         } catch (error) {
             console.error('Erro ao criar gráfico:', error);
@@ -1349,6 +1725,7 @@
                 }
                 payload.indicadores = state.modal.config.indicators;
                 payload.metricas = state.modal.config.metrics;
+                console.log('Métricas sendo salvas:', payload.metricas);
             } else if (state.workflowType === 'analise_jp') {
                 if (!state.modal.config.category) {
                     if (modalFeedback) {

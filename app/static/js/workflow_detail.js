@@ -56,9 +56,7 @@
                 const confirmed = window.confirm('Deseja remover o upload atual?');
                 if (!confirmed) return;
                 try {
-                    await apiRequest(`/api/workflows/${workflow.id}/balancete/upload/${state.dataset.upload.id}`, {
-                        method: 'DELETE',
-                    });
+                    await apiRequest(`/api/workflows/${workflow.id}/balancete/upload/${state.dataset.upload.id}`, 'DELETE');
                     state.dataset = null;
                     renderBalancete();
                 } catch (error) {
@@ -217,7 +215,7 @@
                 if (!dataset?.upload?.id) return;
                 if (!window.confirm('Remover upload da categoria selecionada?')) return;
                 try {
-                    await apiRequest(`/api/workflows/${workflow.id}/analise-jp/upload/${slug}/${dataset.upload.id}`, { method: 'DELETE' });
+                    await apiRequest(`/api/workflows/${workflow.id}/analise-jp/upload/${slug}/${dataset.upload.id}`, 'DELETE');
                     state.categories.set(slug, null);
                     updateCategoryUI({ statusLabel, deleteButton, viewButton, tableContainer }, null);
                     setFeedback(feedback, 'Upload removido.', true);
