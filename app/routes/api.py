@@ -420,11 +420,14 @@ def update_workflow(workflow_id: int):
     payload = request.get_json(silent=True) or {}
     nome = str(payload.get("nome") or "").strip()
     descricao = str(payload.get("descricao") or "").strip() or None
+    tipo = str(payload.get("tipo") or "").strip()
 
     if nome:
         workflow.nome = nome
     if descricao is not None or "descricao" in payload:
         workflow.descricao = descricao
+    if tipo and tipo in WORKFLOW_TYPES:
+        workflow.tipo = tipo
 
     try:
         db.session.commit()

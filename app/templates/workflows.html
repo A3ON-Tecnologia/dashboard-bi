@@ -6,55 +6,11 @@
 <section class="space-y-8">
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
         <div>
-            <p class="text-sm opacity-70">Orquestre extrações e dashboards em um único fluxo.</p>
             <h1 class="text-3xl font-semibold mt-1">Workflows</h1>
         </div>
-        <a href="https://www.flask.dev" target="_blank" class="inline-flex items-center gap-2 text-sm opacity-70 hover:opacity-100 transition">
-            <span>Documentação</span>
-            <span aria-hidden="true">↗</span>
-        </a>
-    </div>
-
-    <div class="grid lg:grid-cols-2 gap-6">
-        <div class="rounded-2xl border border-white/10 bg-white/5 backdrop-blur px-6 py-6 space-y-5">
-            <div>
-                <h2 class="text-xl font-semibold">Criar novo workflow</h2>
-                <p class="text-sm opacity-70">Selecione o tipo desejado e comece importando seus dados.</p>
-            </div>
-
-            <form id="createWorkflowForm" class="grid gap-4">
-                <label class="grid gap-2">
-                    <span class="text-sm font-medium opacity-80">Nome do workflow</span>
-                    <input type="text" name="nome" required maxlength="255" class="rounded-lg border border-white/20 bg-transparent px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/60" placeholder="Ex.: Balancete Mensal" />
-                </label>
-                <label class="grid gap-2">
-                    <span class="text-sm font-medium opacity-80">Descrição</span>
-                    <textarea name="descricao" rows="3" class="rounded-lg border border-white/20 bg-transparent px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/60" placeholder="Objetivo e contexto do workflow"></textarea>
-                </label>
-                <label class="grid gap-2">
-                    <span class="text-sm font-medium opacity-80">Tipo</span>
-                    <select name="tipo" required class="rounded-lg border border-white/20 bg-transparent px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/60">
-                        <option value="">Selecione...</option>
-                        <option value="balancete">Balancete</option>
-                        <option value="analise_jp">Análise JP</option>
-                    </select>
-                </label>
-                <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 font-medium {{ theme.buttons.primary }}">
-                    Criar workflow
-                </button>
-                <p id="createWorkflowFeedback" class="text-sm opacity-70 hidden"></p>
-            </form>
-        </div>
-
-        <div class="rounded-2xl border border-white/10 bg-white/5 backdrop-blur px-6 py-6 h-fit">
-            <h2 class="text-xl font-semibold mb-4">Como funciona</h2>
-            <ol class="space-y-3 text-sm opacity-80 leading-relaxed">
-                <li><strong>1.</strong> Crie um workflow e escolha se ele é do tipo Balancete ou Análise JP.</li>
-                <li><strong>2.</strong> Faça upload das planilhas para liberar a visualização dos dados.</li>
-                <li><strong>3.</strong> Construa dashboards dinâmicos, definindo indicadores, métricas e estilos.</li>
-                <li><strong>4.</strong> Ajuste ou substitua uploads a qualquer momento, mantendo o histórico sempre atualizado.</li>
-            </ol>
-        </div>
+        <button id="openCreateModal" class="inline-flex items-center justify-center gap-2 rounded-lg px-5 py-2.5 font-medium {{ theme.buttons.primary }} transition">
+            <span>+ Criar workflow</span>
+        </button>
     </div>
 
     <div class="rounded-2xl border border-white/10 bg-white/5 backdrop-blur px-6 py-6">
@@ -69,9 +25,9 @@
             </div>
         </div>
 
-        <div id="workflowList" class="grid gap-4">
+        <div id="workflowList" class="grid md:grid-cols-2 gap-4">
             {% for item in workflows %}
-            <article class="rounded-xl border border-white/10 bg-black/10 backdrop-blur px-5 py-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <article class="rounded-xl border border-white/10 bg-black/10 backdrop-blur px-5 py-4 flex flex-col gap-4">
                 <div>
                     <p class="text-sm uppercase tracking-wide opacity-60">{{ item.tipo.replace('_', ' ') }}</p>
                     <h3 class="text-lg font-semibold">{{ item.nome }}</h3>
@@ -79,6 +35,9 @@
                 </div>
                 <div class="flex flex-wrap gap-3">
                     <a href="{{ url_for('web.workflow_detail_view', workflow_id=item.id) }}" class="px-4 py-2 rounded-lg border border-white/15 hover:border-white/40 transition text-sm">Abrir</a>
+                    <button data-action="edit-workflow" data-workflow-id="{{ item.id }}" class="px-4 py-2 rounded-lg border border-blue-400/40 text-blue-200 hover:border-blue-400 hover:text-blue-100 transition text-sm">
+                        Editar
+                    </button>
                     <button data-action="delete-workflow" data-workflow-id="{{ item.id }}" class="px-4 py-2 rounded-lg border border-red-400/40 text-red-200 hover:border-red-400 hover:text-red-100 transition text-sm">
                         Excluir
                     </button>
@@ -89,7 +48,112 @@
             {% endfor %}
         </div>
     </div>
+
 </section>
+
+<!-- Modal de criação -->
+<div id="createModal" class="modal-backdrop fixed inset-0 bg-black/60 hidden z-50">
+    <div class="w-full h-full flex items-center justify-center p-6">
+        <div class="modal-content max-w-lg w-full {{ theme.modal }} rounded-2xl shadow-2xl border border-white/10">
+            <div class="px-6 py-4 border-b border-white/10">
+                <h2 class="text-lg font-semibold">Criar novo workflow</h2>
+            </div>
+            <div class="px-6 py-6">
+                <form id="createWorkflowForm" class="grid gap-4">
+                    <label class="grid gap-2">
+                        <span class="text-sm font-medium opacity-80">Nome do workflow</span>
+                        <input type="text" id="createWorkflowNome" required maxlength="255" class="rounded-lg border border-white/20 bg-transparent px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/60" placeholder="Ex.: Balancete Mensal" />
+                    </label>
+                    <label class="grid gap-2">
+                        <span class="text-sm font-medium opacity-80">Descrição</span>
+                        <textarea id="createWorkflowDescricao" rows="3" class="rounded-lg border border-white/20 bg-transparent px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/60" placeholder="Objetivo e contexto do workflow"></textarea>
+                    </label>
+                    <label class="grid gap-2">
+                        <span class="text-sm font-medium opacity-80">Tipo</span>
+                        <select id="createWorkflowTipo" required class="rounded-lg border border-white/20 bg-transparent px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/60">
+                            <option value="">Selecione...</option>
+                            <option value="balancete">Balancete</option>
+                            <option value="analise_jp">Análise JP</option>
+                        </select>
+                    </label>
+                    <p id="createWorkflowFeedback" class="text-sm opacity-70 hidden"></p>
+                </form>
+            </div>
+            <div class="px-6 py-4 border-t border-white/10 flex gap-3 justify-end">
+                <button id="cancelCreate" class="px-4 py-2 rounded-lg border border-white/20 hover:border-white/40 transition text-sm">
+                    Cancelar
+                </button>
+                <button id="confirmCreate" class="px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white font-medium transition text-sm">
+                    Criar workflow
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de edição -->
+<div id="editModal" class="modal-backdrop fixed inset-0 bg-black/60 hidden z-50">
+    <div class="w-full h-full flex items-center justify-center p-6">
+        <div class="modal-content max-w-lg w-full {{ theme.modal }} rounded-2xl shadow-2xl border border-white/10">
+            <div class="px-6 py-4 border-b border-white/10">
+                <h2 class="text-lg font-semibold">Editar workflow</h2>
+            </div>
+            <div class="px-6 py-6">
+                <form id="editWorkflowForm" class="grid gap-4">
+                    <input type="hidden" id="editWorkflowId" />
+                    <label class="grid gap-2">
+                        <span class="text-sm font-medium opacity-80">Nome do workflow</span>
+                        <input type="text" id="editWorkflowNome" required maxlength="255" class="rounded-lg border border-white/20 bg-transparent px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/60" placeholder="Ex.: Balancete Mensal" />
+                    </label>
+                    <label class="grid gap-2">
+                        <span class="text-sm font-medium opacity-80">Descrição</span>
+                        <textarea id="editWorkflowDescricao" rows="3" class="rounded-lg border border-white/20 bg-transparent px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/60" placeholder="Objetivo e contexto do workflow"></textarea>
+                    </label>
+                    <label class="grid gap-2">
+                        <span class="text-sm font-medium opacity-80">Tipo</span>
+                        <select id="editWorkflowTipo" required class="rounded-lg border border-white/20 bg-transparent px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/60">
+                            <option value="balancete">Balancete</option>
+                            <option value="analise_jp">Análise JP</option>
+                        </select>
+                    </label>
+                    <p id="editWorkflowFeedback" class="text-sm opacity-70 hidden"></p>
+                </form>
+            </div>
+            <div class="px-6 py-4 border-t border-white/10 flex gap-3 justify-end">
+                <button id="cancelEdit" class="px-4 py-2 rounded-lg border border-white/20 hover:border-white/40 transition text-sm">
+                    Cancelar
+                </button>
+                <button id="confirmEdit" class="px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-medium transition text-sm">
+                    Salvar alterações
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmação de exclusão -->
+<div id="deleteModal" class="modal-backdrop fixed inset-0 bg-black/60 hidden z-50">
+    <div class="w-full h-full flex items-center justify-center p-6">
+        <div class="modal-content max-w-md w-full {{ theme.modal }} rounded-2xl shadow-2xl border border-white/10">
+            <div class="px-6 py-4 border-b border-white/10">
+                <h2 class="text-lg font-semibold text-red-400">Confirmar exclusão</h2>
+            </div>
+            <div class="px-6 py-6">
+                <p class="text-sm opacity-90 mb-2">Deseja realmente excluir o workflow:</p>
+                <p id="deleteWorkflowName" class="font-semibold text-lg mb-4"></p>
+                <p class="text-sm opacity-70">Esta ação é permanente e não poderá ser desfeita.</p>
+            </div>
+            <div class="px-6 py-4 border-t border-white/10 flex gap-3 justify-end">
+                <button id="cancelDelete" class="px-4 py-2 rounded-lg border border-white/20 hover:border-white/40 transition text-sm">
+                    Cancelar
+                </button>
+                <button id="confirmDelete" class="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium transition text-sm">
+                    Excluir workflow
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}

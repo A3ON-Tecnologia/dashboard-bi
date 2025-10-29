@@ -6,12 +6,21 @@
 
     function toggleModal(show) {
         if (!themeModal) return;
-        themeModal.classList.toggle('hidden', !show);
-        body.classList.toggle('overflow-hidden', show);
+        if (show) {
+            themeModal.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                body.classList.add('overflow-hidden');
+            });
+        } else {
+            themeModal.classList.add('hidden');
+            body.classList.remove('overflow-hidden');
+        }
     }
 
     if (openTrigger && themeModal) {
-        openTrigger.addEventListener('click', () => toggleModal(true));
+        openTrigger.addEventListener('click', () => {
+            requestAnimationFrame(() => toggleModal(true));
+        });
     }
 
     closeButtons.forEach((button) => {
