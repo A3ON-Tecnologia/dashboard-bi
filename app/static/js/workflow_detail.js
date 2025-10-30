@@ -94,6 +94,8 @@
         const tableWrapper = document.getElementById('balanceteTableWrapper');
         const deleteButton = document.getElementById('deleteBalanceteUpload');
         const uploadName = document.querySelector('[data-upload-name]');
+        const fileInput = document.getElementById('balanceteFileInput');
+        const statusPill = document.getElementById('balanceteUploadStatus');
 
         if (!state.dataset) {
             if (summary) {
@@ -106,6 +108,15 @@
             }
             if (deleteButton) deleteButton.classList.add('hidden');
             if (uploadName) uploadName.textContent = '';
+            // Estilo vermelho quando aguardando upload
+            if (fileInput) {
+                fileInput.classList.remove('border-emerald-400/40', 'text-emerald-200');
+                fileInput.classList.add('border-rose-400/40');
+            }
+            if (statusPill) {
+                statusPill.textContent = 'aguardando upload';
+                statusPill.className = 'text-xs px-2 py-0.5 rounded border border-rose-400/40 text-rose-200';
+            }
             return;
         }
 
@@ -128,6 +139,16 @@
             } else {
                 deleteButton.classList.add('hidden');
             }
+        }
+
+        // Estilo verde quando há upload
+        if (fileInput) {
+            fileInput.classList.remove('border-rose-400/40');
+            fileInput.classList.add('border-emerald-400/40');
+        }
+        if (statusPill) {
+            statusPill.textContent = 'upload enviado';
+            statusPill.className = 'text-xs px-2 py-0.5 rounded border border-emerald-400/40 text-emerald-200';
         }
 
         if (tableWrapper) {

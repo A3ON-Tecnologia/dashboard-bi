@@ -20,7 +20,7 @@
 
     {% if workflow.tipo == 'balancete' %}
     <div class="grid lg:grid-cols-[1.2fr_1fr] gap-6">
-        <div class="rounded-2xl border border-white/10 bg-white/5 backdrop-blur px-6 py-6 space-y-5">
+        <div class="rounded-2xl border border-white/10 bg-white/5 px-6 py-6 space-y-5">
             <div class="flex items-center justify-between gap-3">
                 <div>
                     <h2 class="text-xl font-semibold">Upload do balancete</h2>
@@ -32,8 +32,8 @@
             </div>
             <form id="balanceteUploadForm" class="grid gap-3" enctype="multipart/form-data">
                 <label class="grid gap-2 text-sm">
-                    <span class="font-medium opacity-80">Selecionar arquivo</span>
-                    <input type="file" name="arquivo" accept=".csv,.xlsx" required class="rounded-lg border border-dashed border-white/30 px-3 py-2 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500/60" />
+                    <span class="font-medium opacity-80 flex items-center gap-2">Selecionar arquivo <span id="balanceteUploadStatus" class="text-xs px-2 py-0.5 rounded border">aguardando upload</span></span>
+                    <input id="balanceteFileInput" type="file" name="arquivo" accept=".csv,.xlsx" required class="rounded-lg border border-dashed border-white/30 px-3 py-2 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500/60" />
                 </label>
                 <button type="submit" class="px-4 py-2 rounded-lg {{ theme.buttons.primary }} text-sm font-medium">
                     Enviar arquivo
@@ -41,7 +41,7 @@
                 <p id="balanceteUploadFeedback" class="text-sm opacity-70 hidden"></p>
             </form>
         </div>
-        <div class="rounded-2xl border border-white/10 bg-white/5 backdrop-blur px-6 py-6 space-y-4" id="balanceteSummary">
+        <div class="rounded-2xl border border-white/10 bg-white/5 px-6 py-6 space-y-4" id="balanceteSummary">
             <h3 class="text-lg font-semibold">Resumo</h3>
             <ul class="text-sm opacity-80 space-y-2">
                 <li><strong>Período 1:</strong> <span data-periodo-1>-</span></li>
@@ -52,7 +52,7 @@
         </div>
     </div>
 
-    <div class="rounded-2xl border border-white/10 bg-white/5 backdrop-blur px-6 py-6">
+    <div class="rounded-2xl border border-white/10 bg-white/5 px-6 py-6">
         <div class="flex items-center justify-between gap-3 mb-4">
             <h2 class="text-xl font-semibold">Pré-visualização dos dados</h2>
             <span class="text-sm opacity-60" data-upload-name></span>
@@ -62,14 +62,14 @@
         </div>
     </div>
     {% else %}
-    <div class="rounded-2xl border border-white/10 bg-white/5 backdrop-blur px-6 py-6 space-y-8">
+    <div class="rounded-2xl border border-white/10 bg-white/5 px-6 py-6 space-y-8">
         <div>
             <h2 class="text-xl font-semibold">Categorias de upload</h2>
             <p class="text-sm opacity-70">Cada categoria possui um CSV independente. Faça o upload em cada bloco para liberar a visualização das tabelas e a criação de gráficos.</p>
         </div>
         <div class="grid gap-6 xl:grid-cols-2" id="analiseCategoryList">
             {% for categoria in workflow.analise_jp.categories %}
-            <article class="rounded-xl border {% if categoria.has_upload %}border-green-500/60{% else %}border-white/10{% endif %} bg-black/10 backdrop-blur px-5 py-5 space-y-5 relative transition-colors duration-300" data-category="{{ categoria.slug }}" data-has-upload="{{ 'true' if categoria.has_upload else 'false' }}">
+            <article class="rounded-xl border {% if categoria.has_upload %}border-green-500/60{% else %}border-white/10{% endif %} bg-black/10 px-5 py-5 space-y-5 relative" data-category="{{ categoria.slug }}" data-has-upload="{{ 'true' if categoria.has_upload else 'false' }}">
                 <div class="flex items-center justify-between gap-3">
                     <div class="flex items-center gap-2">
                         {% if categoria.has_upload %}

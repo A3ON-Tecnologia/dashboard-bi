@@ -52,7 +52,7 @@
                             <p class="text-sm opacity-70">${wf.descricao || 'Sem descrição informada.'}</p>
                         </div>
                         <div class="flex flex-wrap gap-3">
-                            <a href="/workflows/${wf.id}" class="px-4 py-2 rounded-lg border border-white/15 hover:border-white/40 transition text-sm">Abrir</a>
+                            <a href="/workflows/${wf.id}" class="inline-flex items-center justify-center px-4 py-2 rounded-lg border border-emerald-400/40 text-emerald-200 hover:border-emerald-400 hover:text-emerald-100 transition text-sm">Abrir</a>
                             <button class="px-4 py-2 rounded-lg border border-blue-400/40 text-blue-200 hover:border-blue-400 hover:text-blue-100 transition text-sm" data-action="edit-workflow" data-workflow-id="${wf.id}">
                                 Editar
                             </button>
