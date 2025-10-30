@@ -779,13 +779,32 @@
         const scalesConfig = {
             x: {
                 beginAtZero: true,
-                ticks: { color: 'rgba(255,255,255,0.9)' },
-                // Aplicar offset para gráficos de linha/área
-                offset: (chartType === 'line' || chartType === 'area') && chartOptions.xOffset !== false
+                ticks: { 
+                    color: 'rgba(255,255,255,0.9)',
+                    padding: 10
+                },
+                grid: {
+                    display: true,
+                    drawBorder: true,
+                    drawOnChartArea: true,
+                    drawTicks: true,
+                    offset: true
+                },
+                // Aplicar offset para gráficos de barra e linha/área
+                offset: true
             },
             y: {
                 beginAtZero: true,
-                ticks: { color: 'rgba(255,255,255,0.9)' }
+                ticks: { 
+                    color: 'rgba(255,255,255,0.9)',
+                    padding: 10
+                },
+                grid: {
+                    display: true,
+                    drawBorder: true,
+                    drawOnChartArea: true,
+                    drawTicks: true
+                }
             }
         };
 
@@ -807,8 +826,19 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 indexAxis: chartType === 'bar-horizontal' ? 'y' : 'x',
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 20,
+                        bottom: 10
+                    }
+                },
                 plugins: pluginsConfig,
                 scales: scalesConfig,
+                // Controlar espessura das barras
+                barPercentage: chartType === 'bar-horizontal' ? 0.65 : 0.5,
+                categoryPercentage: chartType === 'bar-horizontal' ? 0.7 : 0.85
             },
         };
     }
@@ -983,11 +1013,9 @@
             if (chartOptionYMax) chartOptionYMax.value = state.modal.config.options.yMax !== null && state.modal.config.options.yMax !== undefined ? state.modal.config.options.yMax : '';
             if (chartOptionYStep) chartOptionYStep.value = state.modal.config.options.yStep !== null && state.modal.config.options.yStep !== undefined ? state.modal.config.options.yStep : '';
             
-            // Mostrar/ocultar campos de eixo Y baseado no tipo de gráfico
-            const chartType = state.modal.config.type;
-            const showYAxisConfig = chartType === 'line' || chartType === 'area';
+            // Ocultar campos de eixo Y (removidos da interface)
             if (yAxisConfigContainer) {
-                yAxisConfigContainer.classList.toggle('hidden', !showYAxisConfig);
+                yAxisConfigContainer.classList.add('hidden');
             }
         }
     }
@@ -1572,6 +1600,14 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 indexAxis: config.type === 'bar-horizontal' ? 'y' : 'x',
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 10,
+                        top: 20,
+                        bottom: 10
+                    }
+                },
                 plugins: {
                     legend: { 
                         display: true, 
@@ -1649,12 +1685,19 @@
                 scales: chartType === 'pie' || chartType === 'doughnut' ? undefined : {
                     x: { 
                         stacked: config.options.stacked,
-                        grid: { color: 'rgba(255,255,255,0.1)' },
-                        // Aplicar offset para gráficos de linha/área
-                        offset: (config.type === 'line' || config.type === 'area') && config.options.xOffset !== false,
+                        grid: { 
+                            color: 'rgba(255,255,255,0.1)',
+                            drawBorder: true,
+                            drawOnChartArea: true,
+                            drawTicks: true,
+                            offset: true
+                        },
+                        // Aplicar offset para gráficos de barra e linha/área
+                        offset: true,
                         ticks: { 
                             color: '#ffffff',
                             font: { size: 14, weight: 'bold' },
+                            padding: 10,
                             callback: function(value) {
                                 // Para barras horizontais, eixo X tem valores (formatar)
                                 if (config.type === 'bar-horizontal') {
@@ -1681,12 +1724,18 @@
                     },
                     y: { 
                         stacked: config.options.stacked,
-                        grid: { color: 'rgba(255,255,255,0.1)' },
+                        grid: { 
+                            color: 'rgba(255,255,255,0.1)',
+                            drawBorder: true,
+                            drawOnChartArea: true,
+                            drawTicks: true
+                        },
                         min: config.options.yMin !== null && config.options.yMin !== undefined ? config.options.yMin : undefined,
                         max: config.options.yMax !== null && config.options.yMax !== undefined ? config.options.yMax : undefined,
                         ticks: { 
                             color: '#ffffff',
                             font: { size: 14, weight: 'bold' },
+                            padding: 10,
                             stepSize: config.options.yStep !== null && config.options.yStep !== undefined ? config.options.yStep : undefined,
                             callback: function(value, index, ticks) {
                                 // Para barras horizontais, retornar o label correspondente
@@ -1700,8 +1749,8 @@
                     }
                 },
                 // Controlar espessura das barras
-                barPercentage: config.type === 'bar-horizontal' ? 0.65 : 0.45,
-                categoryPercentage: config.type === 'bar-horizontal' ? 0.7 : 0.7
+                barPercentage: config.type === 'bar-horizontal' ? 0.65 : 0.5,
+                categoryPercentage: config.type === 'bar-horizontal' ? 0.7 : 0.85
             }
         };
         
