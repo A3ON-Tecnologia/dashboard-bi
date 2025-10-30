@@ -586,6 +586,11 @@ def _hydrate_balancete_chart_from_payload(chart: Dashboard, payload: Dict[str, A
 
     options = payload.get("options")
     chart.options = options if isinstance(options, dict) else {}
+    # Mapear cores de indicadores vindas do frontend
+    indicador_cores = payload.get("indicador_cores")
+    if isinstance(indicador_cores, dict):
+        # Guardar sob a chave canonical em options
+        chart.options["indicator_colors"] = indicador_cores
 
 
 @api_bp.get("/workflows/<int:workflow_id>/balancete/charts")

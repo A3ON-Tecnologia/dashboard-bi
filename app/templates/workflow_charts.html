@@ -115,6 +115,24 @@
                             <input type="checkbox" id="chartOptionDataLabels" class="rounded border-white/30 bg-transparent" checked>
                             <span>Exibir valores diretamente no gráfico.</span>
                         </label>
+                        <label class="inline-flex items-center gap-2 text-sm">
+                            <input type="checkbox" id="chartOptionXOffset" class="rounded border-white/30 bg-transparent" checked>
+                            <span>Espaçamento nas extremidades (linha/área)</span>
+                        </label>
+                    </div>
+                    <div id="yAxisConfigContainer" class="grid gap-3 md:grid-cols-3">
+                        <label class="grid gap-1 text-sm">
+                            <span class="opacity-70">Eixo Y - Mínimo</span>
+                            <input type="number" id="chartOptionYMin" class="rounded-lg border border-white/20 bg-transparent px-3 py-2 text-sm" placeholder="automático" />
+                        </label>
+                        <label class="grid gap-1 text-sm">
+                            <span class="opacity-70">Eixo Y - Máximo</span>
+                            <input type="number" id="chartOptionYMax" class="rounded-lg border border-white/20 bg-transparent px-3 py-2 text-sm" placeholder="automático" />
+                        </label>
+                        <label class="grid gap-1 text-sm">
+                            <span class="opacity-70">Eixo Y - Intervalo</span>
+                            <input type="number" id="chartOptionYStep" class="rounded-lg border border-white/20 bg-transparent px-3 py-2 text-sm" placeholder="automático" />
+                        </label>
                     </div>
                     <p id="chartModalFeedback" class="text-sm opacity-70 hidden"></p>
                 </div>

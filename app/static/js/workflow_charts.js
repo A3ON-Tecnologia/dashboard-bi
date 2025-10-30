@@ -212,6 +212,11 @@
     const tablePreview = document.getElementById('tablePreview');
     const chartOptionStacked = document.getElementById('chartOptionStacked');
     const chartOptionDataLabels = document.getElementById('chartOptionDataLabels');
+    const chartOptionXOffset = document.getElementById('chartOptionXOffset');
+    const chartOptionYMin = document.getElementById('chartOptionYMin');
+    const chartOptionYMax = document.getElementById('chartOptionYMax');
+    const chartOptionYStep = document.getElementById('chartOptionYStep');
+    const yAxisConfigContainer = document.getElementById('yAxisConfigContainer');
     
     // Modal de confirmação de exclusão
     const deleteConfirmModal = document.getElementById('deleteConfirmModal');
@@ -292,6 +297,33 @@
                 if (state.modal.step === 3) renderPreview();
             });
         }
+        if (chartOptionXOffset) {
+            chartOptionXOffset.addEventListener('change', (event) => {
+                state.modal.config.options.xOffset = event.target.checked;
+                if (state.modal.step === 3) renderPreview();
+            });
+        }
+        if (chartOptionYMin) {
+            chartOptionYMin.addEventListener('input', (event) => {
+                const value = event.target.value.trim();
+                state.modal.config.options.yMin = value === '' ? null : parseFloat(value);
+                if (state.modal.step === 3) renderPreview();
+            });
+        }
+        if (chartOptionYMax) {
+            chartOptionYMax.addEventListener('input', (event) => {
+                const value = event.target.value.trim();
+                state.modal.config.options.yMax = value === '' ? null : parseFloat(value);
+                if (state.modal.step === 3) renderPreview();
+            });
+        }
+        if (chartOptionYStep) {
+            chartOptionYStep.addEventListener('input', (event) => {
+                const value = event.target.value.trim();
+                state.modal.config.options.yStep = value === '' ? null : parseFloat(value);
+                if (state.modal.step === 3) renderPreview();
+            });
+        }
         if (chartTypeChoices) chartTypeChoices.addEventListener('click', (event) => handleChartTypeChoice(event));
         if (indicatorOptionsContainer) indicatorOptionsContainer.addEventListener('change', (event) => handleIndicatorToggle(event));
         if (metricOptionsContainer) {
@@ -305,6 +337,26 @@
             valueOptionsContainer.addEventListener('input', (event) => handleValueMetricInput(event));
         }
         if (rowOptionsContainer) rowOptionsContainer.addEventListener('change', (event) => handleRowToggle(event));
+        indicatorOptionsContainer?.addEventListener('change', (event) => {
+            if (event.target.matches('.indicator-color-picker')) {
+                const indicador = event.target.dataset.indicador;
+                const cor = event.target.value;
+                if (state.modal.config.indicators.includes(indicador)) {
+                    if (!state.modal.config.indicatorColors) state.modal.config.indicatorColors = {};
+                    state.modal.config.indicatorColors[indicador] = cor;
+                }
+            }
+        });
+        metricOptionsContainer?.addEventListener('change', (event) => {
+            if (event.target.matches('.metric-color-picker')) {
+                const metricKey = event.target.dataset.metric;
+                const cor = event.target.value;
+                const metric = state.modal.config.metrics.find(m => m.key === metricKey);
+                if (metric) {
+                    metric.color = cor;
+                }
+            }
+        });
         
         // Modal de exclusão
         if (deleteConfirmModal) {
@@ -479,7 +531,7 @@
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-lg font-semibold">${chartName}</h3>
                         <div class="flex gap-2">
-                            <button class="px-3 py-1 rounded-lg border border-white/15 hover:border-white/40 transition text-xs" onclick="editChart(${index})">Editar</button>
+                            <button class="px-3 py-1 rounded-lg border border-white/15 hover:border-white/40 hover:bg-white/5 transition text-xs" onclick="editChart(${index})">Editar</button>
                             <button class="px-3 py-1 rounded-lg border border-red-500/30 hover:border-red-500/60 text-red-400 transition text-xs" onclick="deleteChart(${index})">Excluir</button>
                         </div>
                     </div>
@@ -535,118 +587,108 @@
         }
     }
 
-    function prepareChartData(chart) {
-        // Extrair dados do chart (pode vir em formatos diferentes)
-        const chartData = chart.data || {};
-        const chartConfig = chart.config || chart.chart || chart;
-        const chartType = chartConfig.chart_type || chartConfig.type || 'bar';
-        
-        // Determinar tipo correto do Chart.js
-        let finalType = chartType;
-        if (chartType === 'bar-horizontal') {
-            finalType = 'bar';
-        } else if (chartType === 'donut') {
-            finalType = 'doughnut';
-        } else if (chartType === 'area') {
-            finalType = 'line';
-        }
-        
-        // Preparar datasets
+    function prepareLineAreaChartData(chartData, chartConfig) {
+        // Lógica exclusiva para balancete linha/área
         let labels = chartData.labels || [];
         let series = chartData.series || [];
-        
-        console.log('Series recebidas do backend:', series);
-        
-        // Detectar se há valores monetários
-        const hasCurrencyValues = series.some(s => s.value_kind === 'currency');
-        const hasPercentageValues = series.some(s => s.value_kind === 'percentage');
-        
-        // Para gráficos de linha e área com múltiplas métricas de período, combinar em uma única série temporal
-        if ((chartType === 'line' || chartType === 'area') && series.length > 1) {
-            const periodMetrics = series.filter(s => 
-                s.key === 'valor_periodo_1' || 
-                s.key === 'valor_periodo_2' || 
-                s.label?.toLowerCase().includes('período') ||
-                s.label?.toLowerCase().includes('periodo')
-            );
-            
-            // Se todas as séries são métricas de período, combinar em uma única linha temporal
-            if (periodMetrics.length === series.length && periodMetrics.length > 1) {
-                // Criar labels temporais (períodos)
-                const temporalLabels = periodMetrics.map(s => s.label);
-                
-                // Para cada indicador original, criar uma série temporal
-                const numIndicators = labels.length;
-                const combinedSeries = [];
-                
-                for (let i = 0; i < numIndicators; i++) {
-                    const indicatorLabel = labels[i];
-                    const temporalValues = periodMetrics.map(metric => metric.values[i]);
-                    
-                    combinedSeries.push({
-                        label: indicatorLabel,
-                        values: temporalValues,
-                        color: COLOR_PALETTE[i % COLOR_PALETTE.length],
-                        value_kind: periodMetrics[0].value_kind || 'number'
-                    });
-                }
-                
-                // Atualizar labels e series
-                labels = temporalLabels;
-                series = combinedSeries;
+        const chartType = chartConfig.chart_type || chartConfig.type || 'line';
+        const periodMetrics = series.filter(s =>
+            s.key === 'valor_periodo_1' ||
+            s.key === 'valor_periodo_2' ||
+            s.label?.toLowerCase().includes('período') ||
+            s.label?.toLowerCase().includes('periodo')
+        );
+        if (periodMetrics.length === series.length && periodMetrics.length > 1) {
+            // labels = períodos, datasets = indicadores
+            const temporalLabels = periodMetrics.map(s => s.label);
+            const numIndicators = labels.length;
+            const combinedSeries = [];
+            const indicatorColorMap = (chartConfig.indicatorColors) || (chartConfig.options && chartConfig.options.indicator_colors) || {};
+            for (let i = 0; i < numIndicators; i++) {
+                const indicatorLabel = labels[i];
+                const corPersonalizada = indicatorColorMap[indicatorLabel] || COLOR_PALETTE[i % COLOR_PALETTE.length];
+                const temporalValues = periodMetrics.map(metric => metric.values[i]);
+                combinedSeries.push({
+                    label: indicatorLabel,
+                    values: temporalValues,
+                    // Usar a cor do indicador para a linha
+                    color: corPersonalizada,
+                    value_kind: periodMetrics[0].value_kind || 'number'
+                });
             }
+            labels = temporalLabels;
+            series = combinedSeries;
         }
-        
-        // Para gráficos de barras horizontais: Eixo Y = Indicadores, Legenda = Métricas
-        // Para gráficos de barras verticais: Eixo X = Períodos, Legenda = Indicadores
-        if (chartType === 'bar-horizontal' && series.length > 0) {
-            // Barras horizontais: manter estrutura original
-            // labels = indicadores (eixo Y)
-            // series = métricas (legenda), cada uma com valores por indicador
-            // Não precisa transformar, já está no formato correto
-        } else if (chartType === 'bar' && series.length > 1) {
-            // Barras verticais: INVERTER para mostrar indicadores no eixo X e períodos na legenda
-            const periodMetrics = series.filter(s => 
-                s.key === 'valor_periodo_1' || 
-                s.key === 'valor_periodo_2' || 
+        return { labels, series };
+    }
+    
+    function prepareBarChartData(chartData, chartConfig) {
+        // Fluxo original para barras
+        let labels = chartData.labels || [];
+        let series = chartData.series || [];
+        const chartType = chartConfig.chart_type || chartConfig.type || 'bar';
+        if (chartType === 'bar' && series.length > 1) {
+            const periodMetrics = series.filter(s =>
+                s.key === 'valor_periodo_1' ||
+                s.key === 'valor_periodo_2' ||
                 s.label?.toLowerCase().includes('período') ||
                 s.label?.toLowerCase().includes('periodo')
             );
-            
-            // Se todas as séries são métricas de período, reorganizar
             if (periodMetrics.length === series.length && periodMetrics.length > 1) {
-                const indicatorLabels = labels; // Indicadores vão para o eixo X
+                const indicatorLabels = labels;
                 const combinedSeries = [];
-                
-                // Para cada PERÍODO, criar uma série com valores de todos os INDICADORES
                 periodMetrics.forEach((metric, metricIndex) => {
                     combinedSeries.push({
-                        label: metric.label, // Nome do período na legenda (2024, 2025)
-                        values: metric.values, // Valores de todos os indicadores para este período
-                        color: metric.color || COLOR_PALETTE[metricIndex % COLOR_PALETTE.length], // Usar cor escolhida
+                        label: metric.label,
+                        values: metric.values,
+                        color: metric.color || COLOR_PALETTE[metricIndex % COLOR_PALETTE.length],
                         value_kind: metric.value_kind || 'number'
                     });
                 });
-                
-                // Atualizar labels (eixo X = indicadores) e series (legenda = períodos)
                 labels = indicatorLabels;
                 series = combinedSeries;
             }
         }
-        
+        // Nunca muda para bar-horizontal
+        return { labels, series };
+    }
+    
+    function prepareGenericChartData(chartData) {
+        // Mantém a estrutura do backend
+        return {
+            labels: chartData.labels || [],
+            series: chartData.series || []
+        };
+    }
+    
+    function prepareChartData(chart) {
+        const chartData = chart.data || {};
+        const chartConfig = chart.config || chart.chart || chart;
+        const chartType = chartConfig.chart_type || chartConfig.type || 'bar';
+        const isBalancete = window.__WORKFLOW__?.tipo === 'balancete' || state?.workflowType === 'balancete';
+
+        let labels = [];
+        let series = [];
+
+        // Separação absoluta de lógica!
+        if (isBalancete && (chartType === 'line' || chartType === 'area')) {
+            ({ labels, series } = prepareLineAreaChartData(chartData, chartConfig));
+        } else if (chartType === 'bar' || chartType === 'bar-horizontal') {
+            ({ labels, series } = prepareBarChartData(chartData, chartConfig));
+        } else {
+            ({ labels, series } = prepareGenericChartData(chartData));
+        }
+
         const datasets = series.map((s, index) => {
             const color = s.color || COLOR_PALETTE[index % COLOR_PALETTE.length];
-            console.log(`Dataset ${index}: label="${s.label}", color from backend="${s.color}", final color="${color}"`);
-            
             const dataset = {
                 label: s.label,
                 data: s.values || [],
                 backgroundColor: color,
                 borderColor: color,
                 borderWidth: 2,
-                valueKind: s.value_kind || 'number' // Armazenar tipo do valor
+                valueKind: s.value_kind || 'number'
             };
-            
             if (chartType === 'area') {
                 dataset.fill = true;
                 dataset.tension = 0.4;
@@ -657,14 +699,107 @@
                 dataset.borderRadius = 8;
                 dataset.borderSkipped = false;
                 dataset.borderWidth = 3;
-                // Efeito neon com sombra brilhante
                 dataset.shadowBlur = 20;
                 dataset.shadowColor = color;
             }
-            
             return dataset;
         });
-        
+
+        let finalType = chartType;
+        if (chartType === 'bar-horizontal') {
+            finalType = 'bar';
+        } else if (chartType === 'donut') {
+            finalType = 'doughnut';
+        } else if (chartType === 'area') {
+            finalType = 'line';
+        }
+
+        // Config básica de datalabels branca para barras:
+        let pluginsConfig = {
+            legend: {
+                display: true,
+                position: 'top',
+                labels: {
+                    color: 'rgba(255,255,255,0.9)',
+                    font: {
+                        size: 16,
+                        weight: 'bold'
+                    }
+                }
+            },
+            tooltip: {
+                position: 'average',
+                yAlign: 'bottom',
+                xAlign: 'center',
+                bodyFont: {
+                    size: 14,
+                    weight: 'bold'
+                },
+                titleFont: {
+                    size: 16,
+                    weight: 'bold'
+                },
+                padding: 12,
+            }
+        };
+        if (chartType === 'bar' || chartType === 'bar-horizontal') {
+            pluginsConfig.datalabels = {
+                display: true,
+                color: '#fff',
+                font: { weight: 'bold', size: 14 },
+                formatter: (value, context) => {
+                    if (value == null) return '';
+                    // Formatação monetária com R$
+                    return 'R$ ' + value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                },
+            };
+        } else if (isBalancete && (chartType === 'line' || chartType === 'area')) {
+            // Configuração de datalabels para linha e área do balancete
+            pluginsConfig.datalabels = {
+                display: true,
+                color: '#fff',
+                font: { weight: 'bold', size: 12 },
+                align: 'top',
+                anchor: 'end',
+                formatter: (value, context) => {
+                    if (value == null) return '';
+                    // Formatação monetária compacta
+                    if (Math.abs(value) >= 1000000) {
+                        return 'R$ ' + (value / 1000000).toFixed(2) + 'M';
+                    } else if (Math.abs(value) >= 1000) {
+                        return 'R$ ' + (value / 1000).toFixed(2) + 'K';
+                    }
+                    return 'R$ ' + value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                },
+            };
+        }
+
+        // Configurar scales com base nas opções do gráfico
+        const chartOptions = chart.config?.options || chart.chart?.options || chart.options || {};
+        const scalesConfig = {
+            x: {
+                beginAtZero: true,
+                ticks: { color: 'rgba(255,255,255,0.9)' },
+                // Aplicar offset para gráficos de linha/área
+                offset: (chartType === 'line' || chartType === 'area') && chartOptions.xOffset !== false
+            },
+            y: {
+                beginAtZero: true,
+                ticks: { color: 'rgba(255,255,255,0.9)' }
+            }
+        };
+
+        // Aplicar configurações personalizadas do eixo Y
+        if (chartOptions.yMin !== null && chartOptions.yMin !== undefined) {
+            scalesConfig.y.min = chartOptions.yMin;
+        }
+        if (chartOptions.yMax !== null && chartOptions.yMax !== undefined) {
+            scalesConfig.y.max = chartOptions.yMax;
+        }
+        if (chartOptions.yStep !== null && chartOptions.yStep !== undefined) {
+            scalesConfig.y.ticks.stepSize = chartOptions.yStep;
+        }
+
         return {
             type: finalType,
             data: { labels, datasets },
@@ -672,143 +807,9 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 indexAxis: chartType === 'bar-horizontal' ? 'y' : 'x',
-                plugins: {
-                    legend: { 
-                        display: true, 
-                        position: 'top',
-                        labels: { 
-                            color: 'rgba(255,255,255,0.9)',
-                            font: {
-                                size: 16,
-                                weight: 'bold'
-                            }
-                        }
-                    },
-                    tooltip: {
-                        position: 'average',
-                        yAlign: 'bottom',
-                        xAlign: 'center',
-                        bodyFont: {
-                            size: 14,
-                            weight: 'bold'
-                        },
-                        titleFont: {
-                            size: 16,
-                            weight: 'bold'
-                        },
-                        padding: 12,
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.dataset.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
-                                
-                                // Para barras horizontais, o valor está em parsed.x
-                                // Para outros gráficos, está em parsed.y
-                                const value = chartType === 'bar-horizontal' 
-                                    ? context.parsed.x 
-                                    : (context.parsed.y !== undefined ? context.parsed.y : context.parsed);
-                                const valueKind = context.dataset.valueKind || 'number';
-                                
-                                if (valueKind === 'currency') {
-                                    label += formatCurrency(value);
-                                } else if (valueKind === 'percentage') {
-                                    label += formatPercentage(value);
-                                } else {
-                                    label += value !== null ? value.toLocaleString('pt-BR', { maximumFractionDigits: 2 }) : '';
-                                }
-                                
-                                return label;
-                            }
-                        }
-                    },
-                    datalabels: { 
-                        display: chartConfig.options?.dataLabels !== false,
-                        color: '#fff',
-                        font: { weight: 'bold', size: 14 },
-                        formatter: (value, context) => {
-                            if (value === null || value === undefined) return '';
-                            
-                            const valueKind = context.dataset.valueKind || 'number';
-                            
-                            if (valueKind === 'currency') {
-                                // Formato compacto para moeda (sem arredondamento)
-                                if (Math.abs(value) >= 1000000) {
-                                    return 'R$ ' + (value / 1000000).toFixed(2) + 'M';
-                                } else if (Math.abs(value) >= 1000) {
-                                    return 'R$ ' + (value / 1000).toFixed(2) + 'K';
-                                }
-                                return 'R$ ' + value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                            } else if (valueKind === 'percentage') {
-                                return value.toFixed(2) + '%';
-                            } else {
-                                return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                            }
-                        }
-                    }
-                },
-                scales: finalType === 'pie' || finalType === 'doughnut' ? undefined : {
-                    x: { 
-                        stacked: chartConfig.options?.stacked || false,
-                        grid: { color: 'rgba(255,255,255,0.1)' },
-                        ticks: { 
-                            color: '#ffffff',
-                            font: { size: 14, weight: 'bold' },
-                            callback: function(value) {
-                                // Para barras horizontais, eixo X tem os valores (formatar)
-                                if (chartType === 'bar-horizontal') {
-                                    if (hasCurrencyValues) {
-                                        if (Math.abs(value) >= 1000000) {
-                                            return 'R$ ' + (value / 1000000).toFixed(2) + 'M';
-                                        } else if (Math.abs(value) >= 1000) {
-                                            return 'R$ ' + (value / 1000).toFixed(2) + 'K';
-                                        }
-                                        return 'R$ ' + value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                                    } else if (hasPercentageValues) {
-                                        return value.toFixed(2) + '%';
-                                    }
-                                    return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                                }
-                                // Para outros gráficos (barras verticais), eixo X tem labels dos indicadores
-                                return this.getLabelForValue(value);
-                            }
-                        },
-                        beginAtZero: chartType === 'bar-horizontal'
-                    },
-                    y: { 
-                        stacked: chartConfig.options?.stacked || false,
-                        grid: { color: 'rgba(255,255,255,0.1)' },
-                        ticks: { 
-                            color: '#ffffff',
-                            font: { size: 14, weight: 'bold' },
-                            callback: function(value, index, ticks) {
-                                // Para barras horizontais, eixo Y tem os labels (retornar o label do array)
-                                if (chartType === 'bar-horizontal') {
-                                    // value é o índice, precisamos pegar o label correspondente
-                                    return this.getLabelForValue(value);
-                                }
-                                // Para outros gráficos, eixo Y tem valores (formatar)
-                                if (hasCurrencyValues) {
-                                    if (Math.abs(value) >= 1000000) {
-                                        return 'R$ ' + (value / 1000000).toFixed(2) + 'M';
-                                    } else if (Math.abs(value) >= 1000) {
-                                        return 'R$ ' + (value / 1000).toFixed(2) + 'K';
-                                    }
-                                    return 'R$ ' + value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                                } else if (hasPercentageValues) {
-                                    return value.toFixed(2) + '%';
-                                }
-                                return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                            }
-                        },
-                        beginAtZero: chartType !== 'bar-horizontal'
-                    }
-                },
-                // Controlar espessura das barras
-                barPercentage: chartType === 'bar-horizontal' ? 0.7 : 0.5,
-                categoryPercentage: chartType === 'bar-horizontal' ? 0.75 : 0.75
-            }
+                plugins: pluginsConfig,
+                scales: scalesConfig,
+            },
         };
     }
 
@@ -842,7 +843,11 @@
                 rows: [],
                 options: {
                     stacked: false,
-                    dataLabels: true
+                    dataLabels: true,
+                    xOffset: true,
+                    yMin: null,
+                    yMax: null,
+                    yStep: null
                 }
             }
         };
@@ -905,8 +910,14 @@
                 rows: [...((chartConfig.options?.row_indices) || [])],
                 options: {
                     stacked: chartConfig.options?.stacked || false,
-                    dataLabels: chartConfig.options?.dataLabels !== false
-                }
+                    dataLabels: chartConfig.options?.dataLabels !== false,
+                    xOffset: chartConfig.options?.xOffset !== false,
+                    yMin: chartConfig.options?.yMin || null,
+                    yMax: chartConfig.options?.yMax || null,
+                    yStep: chartConfig.options?.yStep || null
+                },
+                // Importar cores dos indicadores salvas no backend
+                indicatorColors: { ...(chartConfig.options?.indicator_colors || {}) }
             };
             
             console.log('Config carregada para edição:', state.modal.config);
@@ -955,12 +966,29 @@
         
         // Se for passo 1 e estiver editando, marcar o tipo selecionado
         if (step === 1 && state.modal.mode === 'edit' && state.modal.config.type) {
-            setTimeout(() => {
+            requestAnimationFrame(() => {
                 const button = chartTypeChoices?.querySelector(`[data-chart-type="${state.modal.config.type}"]`);
                 if (button) {
                     button.classList.add('ring-2', 'ring-blue-500', 'bg-blue-500/10');
                 }
-            }, 50);
+            });
+        }
+        
+        // Se for passo 3, preencher os campos de opções
+        if (step === 3) {
+            if (chartOptionStacked) chartOptionStacked.checked = state.modal.config.options.stacked || false;
+            if (chartOptionDataLabels) chartOptionDataLabels.checked = state.modal.config.options.dataLabels !== false;
+            if (chartOptionXOffset) chartOptionXOffset.checked = state.modal.config.options.xOffset !== false;
+            if (chartOptionYMin) chartOptionYMin.value = state.modal.config.options.yMin !== null && state.modal.config.options.yMin !== undefined ? state.modal.config.options.yMin : '';
+            if (chartOptionYMax) chartOptionYMax.value = state.modal.config.options.yMax !== null && state.modal.config.options.yMax !== undefined ? state.modal.config.options.yMax : '';
+            if (chartOptionYStep) chartOptionYStep.value = state.modal.config.options.yStep !== null && state.modal.config.options.yStep !== undefined ? state.modal.config.options.yStep : '';
+            
+            // Mostrar/ocultar campos de eixo Y baseado no tipo de gráfico
+            const chartType = state.modal.config.type;
+            const showYAxisConfig = chartType === 'line' || chartType === 'area';
+            if (yAxisConfigContainer) {
+                yAxisConfigContainer.classList.toggle('hidden', !showYAxisConfig);
+            }
         }
     }
 
@@ -1061,7 +1089,7 @@
             
             // Se estiver editando, marcar checkboxes
             if (state.modal.mode === 'edit') {
-                setTimeout(() => {
+                requestAnimationFrame(() => {
                     // Marcar indicadores
                     state.modal.config.indicators.forEach(indicator => {
                         const checkbox = indicatorOptionsContainer?.querySelector(`input[value="${indicator}"]`);
@@ -1081,7 +1109,7 @@
                             if (colorInput && metric.color) colorInput.value = metric.color;
                         }
                     });
-                }, 100);
+                });
             }
         } else if (state.workflowType === 'analise_jp') {
             balanceteConfig?.classList.add('hidden');
@@ -1090,7 +1118,7 @@
             
             // Se estiver editando, selecionar categoria e marcar checkboxes
             if (state.modal.mode === 'edit' && state.modal.config.category) {
-                setTimeout(() => {
+                requestAnimationFrame(() => {
                     if (chartCategorySelect) {
                         chartCategorySelect.value = state.modal.config.category;
                         handleCategoryChange({ target: { value: state.modal.config.category } });
@@ -1121,7 +1149,7 @@
                         const checkbox = rowOptionsContainer?.querySelector(`input[value="${rowIndex}"]`);
                         if (checkbox) checkbox.checked = true;
                     });
-                }, 100);
+                });
             }
         }
     }
@@ -1129,27 +1157,39 @@
     function renderBalanceteOptions() {
         if (!state.dataset || !state.dataset.indicator_options) return;
         
-        // Renderizar indicadores
+        // Renderizar indicadores COM input de cor apenas para linha/área
         if (indicatorOptionsContainer) {
-            indicatorOptionsContainer.innerHTML = state.dataset.indicator_options.map(ind => `
-                <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-white/20 hover:bg-white/5 cursor-pointer">
-                    <input type="checkbox" value="${ind.value}" class="rounded">
-                    <span>${ind.label}</span>
-                </label>
-            `).join('');
+            const chartType = state.modal.config.type;
+            const showIndicatorColors = chartType === 'line' || chartType === 'area';
+            
+            indicatorOptionsContainer.innerHTML = state.dataset.indicator_options.map(ind => {
+                const color = state.modal.config.indicatorColors?.[ind.value] || COLOR_PALETTE[0];
+                return `
+                    <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-white/20 hover:bg-white/5 cursor-pointer">
+                        <input type="checkbox" value="${ind.value}" class="rounded">
+                        <span>${ind.label}</span>
+                        ${showIndicatorColors ? `<input type="color" value="${color}" class="w-8 h-8 rounded cursor-pointer indicator-color-picker" data-indicador="${ind.value}">` : ''}
+                    </label>
+                `;
+            }).join('');
         }
         
         // Renderizar métricas
         if (metricOptionsContainer) {
             const metrics = state.dataset.value_options || [];
+            const chartType = state.modal.config.type;
+            const showMetricColors = chartType === 'bar' || chartType === 'bar-horizontal';
             
-            metricOptionsContainer.innerHTML = metrics.map((metric, index) => `
-                <div class="flex items-center gap-3 p-3 rounded-lg border border-white/10">
-                    <input type="checkbox" value="${metric.key}" class="rounded">
-                    <input type="text" value="${metric.label}" placeholder="Rótulo" class="flex-1 bg-transparent border-none focus:outline-none text-sm">
-                    <input type="color" value="${COLOR_PALETTE[index % COLOR_PALETTE.length]}" class="w-8 h-8 rounded cursor-pointer">
-                </div>
-            `).join('');
+            metricOptionsContainer.innerHTML = metrics.map((metric, index) => {
+                const metricColor = state.modal.config.metrics.find(m => m.key === metric.key)?.color || COLOR_PALETTE[index % COLOR_PALETTE.length];
+                return `
+                    <div class="flex items-center gap-3 p-3 rounded-lg border border-white/10">
+                        <input type="checkbox" value="${metric.key}" class="rounded">
+                        <input type="text" value="${metric.label}" placeholder="Rótulo" class="flex-1 bg-transparent border-none focus:outline-none text-sm">
+                        ${showMetricColors ? `<input type="color" value="${metricColor}" class="w-8 h-8 rounded cursor-pointer metric-color-picker" data-metric="${metric.key}">` : ''}
+                    </div>
+                `;
+            }).join('');
         }
     }
 
@@ -1214,14 +1254,18 @@
     function handleIndicatorToggle(event) {
         const checkbox = event.target.closest('input[type="checkbox"]');
         if (!checkbox) return;
-        
         const value = checkbox.value;
+        const container = checkbox.closest('label');
+        const colorInput = container.querySelector('input[type="color"]');
         if (checkbox.checked) {
             if (!state.modal.config.indicators.includes(value)) {
                 state.modal.config.indicators.push(value);
             }
+            if (!state.modal.config.indicatorColors) state.modal.config.indicatorColors = {};
+            state.modal.config.indicatorColors[value] = colorInput?.value || COLOR_PALETTE[0];
         } else {
             state.modal.config.indicators = state.modal.config.indicators.filter(v => v !== value);
+            if (state.modal.config.indicatorColors) delete state.modal.config.indicatorColors[value];
         }
     }
 
@@ -1237,11 +1281,15 @@
         if (checkbox.checked) {
             const existing = state.modal.config.metrics.find(m => m.key === key);
             if (!existing) {
-                state.modal.config.metrics.push({
+                const metricData = {
                     key: key,
-                    label: labelInput?.value || key,
-                    color: colorInput?.value || COLOR_PALETTE[0]
-                });
+                    label: labelInput?.value || key
+                };
+                // Adicionar cor apenas se o input de cor existir (gráficos de barras)
+                if (colorInput) {
+                    metricData.color = colorInput.value;
+                }
+                state.modal.config.metrics.push(metricData);
             }
         } else {
             state.modal.config.metrics = state.modal.config.metrics.filter(m => m.key !== key);
@@ -1416,8 +1464,8 @@
                 datasets = config.indicators.map((indicator, i) => ({
                     label: indicator,
                     data: config.metrics.map(m => getValueForIndicatorAndMetric(indicator, m.key)),
-                    backgroundColor: COLOR_PALETTE[i % COLOR_PALETTE.length],
-                    borderColor: COLOR_PALETTE[i % COLOR_PALETTE.length],
+                    backgroundColor: config.indicatorColors[indicator] || COLOR_PALETTE[i % COLOR_PALETTE.length],
+                    borderColor: config.indicatorColors[indicator] || COLOR_PALETTE[i % COLOR_PALETTE.length],
                     borderWidth: 2
                 }));
                 
@@ -1575,7 +1623,9 @@
                     datalabels: { 
                         display: config.options.dataLabels,
                         color: '#fff',
-                        font: { weight: 'bold', size: 14 },
+                        font: { weight: 'bold', size: (config.type === 'line' || config.type === 'area') ? 12 : 14 },
+                        align: (config.type === 'line' || config.type === 'area') ? 'top' : 'center',
+                        anchor: (config.type === 'line' || config.type === 'area') ? 'end' : 'center',
                         formatter: (value, context) => {
                             if (value === null || value === undefined) return '';
                             
@@ -1600,6 +1650,8 @@
                     x: { 
                         stacked: config.options.stacked,
                         grid: { color: 'rgba(255,255,255,0.1)' },
+                        // Aplicar offset para gráficos de linha/área
+                        offset: (config.type === 'line' || config.type === 'area') && config.options.xOffset !== false,
                         ticks: { 
                             color: '#ffffff',
                             font: { size: 14, weight: 'bold' },
@@ -1630,9 +1682,12 @@
                     y: { 
                         stacked: config.options.stacked,
                         grid: { color: 'rgba(255,255,255,0.1)' },
+                        min: config.options.yMin !== null && config.options.yMin !== undefined ? config.options.yMin : undefined,
+                        max: config.options.yMax !== null && config.options.yMax !== undefined ? config.options.yMax : undefined,
                         ticks: { 
                             color: '#ffffff',
                             font: { size: 14, weight: 'bold' },
+                            stepSize: config.options.yStep !== null && config.options.yStep !== undefined ? config.options.yStep : undefined,
                             callback: function(value, index, ticks) {
                                 // Para barras horizontais, retornar o label correspondente
                                 if (config.type === 'bar-horizontal') {
@@ -1725,6 +1780,7 @@
                 }
                 payload.indicadores = state.modal.config.indicators;
                 payload.metricas = state.modal.config.metrics;
+                payload.indicador_cores = state.modal.config.indicatorColors || {};
                 console.log('Métricas sendo salvas:', payload.metricas);
             } else if (state.workflowType === 'analise_jp') {
                 if (!state.modal.config.category) {
