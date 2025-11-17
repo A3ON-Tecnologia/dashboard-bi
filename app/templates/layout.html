@@ -32,6 +32,65 @@
             transform: scale(1);
             opacity: 1;
         }
+        
+        /* Estilos para dropdown de tipo de valor - tema escuro */
+        .tipo-valor-select option {
+            padding: 8px 12px;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        /* Tema Dark */
+        body.bg-gray-900 .tipo-valor-select option {
+            background-color: rgb(31, 41, 55);
+            color: rgb(243, 244, 246);
+        }
+        body.bg-gray-900 .tipo-valor-select option:hover {
+            background-color: rgb(55, 65, 81);
+        }
+        body.bg-gray-900 .tipo-valor-select option:checked {
+            background-color: rgb(59, 130, 246);
+            color: white;
+        }
+        
+        /* Tema Light */
+        body.bg-gray-50 .tipo-valor-select option {
+            background-color: white;
+            color: rgb(17, 24, 39);
+        }
+        body.bg-gray-50 .tipo-valor-select option:hover {
+            background-color: rgb(243, 244, 246);
+        }
+        body.bg-gray-50 .tipo-valor-select option:checked {
+            background-color: rgb(59, 130, 246);
+            color: white;
+        }
+        
+        /* Tema Neon */
+        body.bg-black .tipo-valor-select option {
+            background-color: rgb(17, 24, 39);
+            color: rgb(134, 239, 172);
+        }
+        body.bg-black .tipo-valor-select option:hover {
+            background-color: rgb(31, 41, 55);
+        }
+        body.bg-black .tipo-valor-select option:checked {
+            background-color: rgb(168, 85, 247);
+            color: white;
+        }
+        
+        /* Tema Futurist */
+        body.bg-gradient-to-br .tipo-valor-select option {
+            background-color: rgb(31, 41, 55);
+            color: rgb(191, 219, 254);
+        }
+        body.bg-gradient-to-br .tipo-valor-select option:hover {
+            background-color: rgb(55, 65, 81);
+        }
+        body.bg-gradient-to-br .tipo-valor-select option:checked {
+            background: linear-gradient(to right, rgb(59, 130, 246), rgb(139, 92, 246));
+            color: white;
+        }
     </style>
 </head>
 <body class="{{ theme.bg }} {{ theme.text }} min-h-screen">

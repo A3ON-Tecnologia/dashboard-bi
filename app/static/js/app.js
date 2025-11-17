@@ -87,8 +87,30 @@ function formatPercentage(value) {
     return `${Number(value).toFixed(2)}%`;
 }
 
+function formatMultiplier(value) {
+    if (value === null || value === undefined || isNaN(value)) return '-';
+    return `${Number(value).toFixed(2)}x`;
+}
+
+function formatValueByType(value, tipo) {
+    if (value === null || value === undefined || isNaN(value)) return '-';
+    
+    switch (tipo) {
+        case 'currency':
+            return formatCurrency(value);
+        case 'percentage':
+            return formatPercentage(value);
+        case 'multiplier':
+            return formatMultiplier(value);
+        default:
+            return formatCurrency(value);
+    }
+}
+
 window.dashboardUtils = {
     apiRequest,
     formatCurrency,
     formatPercentage,
+    formatMultiplier,
+    formatValueByType,
 };

@@ -5,6 +5,7 @@ from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 from flask import Blueprint, current_app, jsonify, request
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.attributes import flag_modified
 
 from app.extensions import db
 from app.models.workflow import Workflow
@@ -151,16 +152,23 @@ def _balancete_chart_payload(chart: Dashboard, dataset: Dict[str, Any]) -> Dict[
 
     labels: List[str] = []
     filtered_rows: List[Dict[str, Any]] = []
+    indicator_tipos: Dict[str, str] = {}
+    
     for indicador in chart.indicadores or []:
         row = indicator_map.get(indicador)
         if not row:
             continue
         labels.append(indicador)
         filtered_rows.append(row)
+        indicator_tipos[indicador] = row.get("tipo_valor", "currency")
 
     if not labels:
         labels = [item.get("indicador", f"Indicador {index + 1}") for index, item in enumerate(indicators)]
         filtered_rows = indicators
+        for item in indicators:
+            nome = item.get("indicador")
+            if nome:
+                indicator_tipos[nome] = item.get("tipo_valor", "currency")
 
     series_payload: List[Dict[str, Any]] = []
     for metric in chart.metricas or []:
@@ -206,6 +214,7 @@ def _balancete_chart_payload(chart: Dashboard, dataset: Dict[str, Any]) -> Dict[
         "data": {
             "labels": labels,
             "series": series_payload,
+            "indicator_tipos": indicator_tipos,
         },
     }
 
@@ -530,6 +539,43 @@ def delete_balancete_upload(workflow_id: int, upload_id: int):
     db.session.commit()
 
     return jsonify({"message": "Upload removido com sucesso."})
+
+
+@api_bp.patch("/workflows/<int:workflow_id>/balancete/indicador/<string:indicador_nome>/tipo")
+def update_indicador_tipo(workflow_id: int, indicador_nome: str):
+    workflow = _workflow_or_404(workflow_id)
+    error = _ensure_workflow_type(workflow, "balancete")
+    if error:
+        return error
+
+    payload = request.get_json(silent=True) or {}
+    tipo_valor = str(payload.get("tipo_valor") or "").strip()
+    
+    if tipo_valor not in {"currency", "percentage", "multiplier"}:
+        return jsonify({"error": "Tipo inválido. Use 'currency', 'percentage' ou 'multiplier'."}), 400
+
+    upload = _latest_balancete_upload(workflow.id)
+    if not upload:
+        return jsonify({"error": "Nenhum upload disponível."}), 404
+
+    dados = upload.dados_extraidos or {}
+    indicadores = dados.get("indicadores") or []
+    
+    updated = False
+    for item in indicadores:
+        if item.get("indicador") == indicador_nome:
+            item["tipo_valor"] = tipo_valor
+            updated = True
+            break
+    
+    if not updated:
+        return jsonify({"error": "Indicador não encontrado."}), 404
+
+    upload.dados_extraidos = dados
+    flag_modified(upload, "dados_extraidos")
+    db.session.commit()
+
+    return jsonify({"message": "Tipo do indicador atualizado com sucesso.", "tipo_valor": tipo_valor})
 
 
 # -----------------------------------------------------------------------------

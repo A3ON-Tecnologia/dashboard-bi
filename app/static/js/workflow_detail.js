@@ -2,12 +2,79 @@
     const workflow = window.__WORKFLOW__;
     if (!workflow) return;
 
-    const { apiRequest, formatCurrency, formatPercentage } = window.dashboardUtils;
+    const { apiRequest, formatCurrency, formatPercentage, formatValueByType } = window.dashboardUtils;
+    const theme = window.__THEME__ || {};
 
     const state = {
         dataset: null,
         categories: new Map(),
     };
+
+    // Estilos do select baseados no tema
+    function getSelectStyles() {
+        const themeName = theme.name || 'dark';
+        
+        const styles = {
+            dark: {
+                bg: 'rgb(31, 41, 55)',
+                bgHover: 'rgb(55, 65, 81)',
+                border: 'rgb(75, 85, 99)',
+                borderHover: 'rgb(107, 114, 128)',
+                borderFocus: 'rgb(59, 130, 246)',
+                text: 'rgb(243, 244, 246)',
+                optionBg: 'rgb(31, 41, 55)',
+                optionHoverBg: 'rgb(55, 65, 81)',
+                optionSelectedBg: 'rgb(59, 130, 246)',
+                arrow: '%23ffffff',
+                shadow: 'none',
+                shadowFocus: '0 0 0 3px rgba(59, 130, 246, 0.1)'
+            },
+            light: {
+                bg: 'white',
+                bgHover: 'rgb(249, 250, 251)',
+                border: 'rgb(209, 213, 219)',
+                borderHover: 'rgb(156, 163, 175)',
+                borderFocus: 'rgb(59, 130, 246)',
+                text: 'rgb(17, 24, 39)',
+                optionBg: 'white',
+                optionHoverBg: 'rgb(243, 244, 246)',
+                optionSelectedBg: 'rgb(59, 130, 246)',
+                arrow: '%23000000',
+                shadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                shadowFocus: '0 0 0 3px rgba(59, 130, 246, 0.1)'
+            },
+            neon: {
+                bg: 'rgb(17, 24, 39)',
+                bgHover: 'rgb(31, 41, 55)',
+                border: 'rgb(168, 85, 247)',
+                borderHover: 'rgb(192, 132, 252)',
+                borderFocus: 'rgb(217, 70, 239)',
+                text: 'rgb(134, 239, 172)',
+                optionBg: 'rgb(17, 24, 39)',
+                optionHoverBg: 'rgb(31, 41, 55)',
+                optionSelectedBg: 'rgb(168, 85, 247)',
+                arrow: '%2386efac',
+                shadow: '0 0 10px rgba(168, 85, 247, 0.3)',
+                shadowFocus: '0 0 15px rgba(168, 85, 247, 0.5)'
+            },
+            futurist: {
+                bg: 'rgba(31, 41, 55, 0.6)',
+                bgHover: 'rgba(55, 65, 81, 0.7)',
+                border: 'rgba(59, 130, 246, 0.5)',
+                borderHover: 'rgba(59, 130, 246, 0.7)',
+                borderFocus: 'rgba(139, 92, 246, 0.8)',
+                text: 'rgb(191, 219, 254)',
+                optionBg: 'rgb(31, 41, 55)',
+                optionHoverBg: 'rgb(55, 65, 81)',
+                optionSelectedBg: 'linear-gradient(to right, rgb(59, 130, 246), rgb(139, 92, 246))',
+                arrow: '%23bfdbfe',
+                shadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                shadowFocus: '0 0 0 3px rgba(59, 130, 246, 0.2)'
+            }
+        };
+        
+        return styles[themeName] || styles.dark;
+    }
 
     const helpers = {
         renderBalancete,
@@ -158,25 +225,61 @@
             }
 
             const headers = [
+                { key: 'tipo_valor', label: 'Tipo' },
                 { key: 'indicador', label: 'Indicador' },
                 ...value_options.map((option) => ({ key: option.key, label: option.label, kind: option.value_kind })),
             ];
 
             const rows = records
-                .map((row) => {
+                .map((row, rowIndex) => {
+                    const tipoValor = row.tipo_valor || 'currency';
                     const cells = headers
                         .map(({ key, kind }) => {
                             const value = row[key];
+                            
+                            if (key === 'tipo_valor') {
+                                const selectStyles = getSelectStyles();
+                                const arrowSvg = `data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='14' height='8' viewBox='0 0 14 8'%3e%3cpath fill='${selectStyles.arrow}' fill-opacity='0.8' d='M1.41 0L7 5.58 12.59 0 14 1.41l-7 7-7-7z'/%3e%3c/svg%3e`;
+                                
+                                return `
+                                    <td class="px-4 py-2 border-b border-white/5">
+                                        <div class="flex justify-center">
+                                            <select 
+                                                class="tipo-valor-select rounded-lg px-4 py-2 text-sm font-semibold focus:outline-none transition-all duration-200 cursor-pointer min-w-[80px] text-center"
+                                                data-indicador="${row.indicador}"
+                                                data-tipo-select
+                                                style="
+                                                    appearance: none;
+                                                    background: ${selectStyles.bg};
+                                                    background-image: url('${arrowSvg}');
+                                                    background-repeat: no-repeat;
+                                                    background-position: calc(100% - 0.75rem) center;
+                                                    border: 1.5px solid ${selectStyles.border};
+                                                    color: ${selectStyles.text};
+                                                    padding-right: 2.5rem;
+                                                    box-shadow: ${selectStyles.shadow};
+                                                "
+                                            >
+                                                <option value="currency" ${tipoValor === 'currency' ? 'selected' : ''}>R$</option>
+                                                <option value="percentage" ${tipoValor === 'percentage' ? 'selected' : ''}>%</option>
+                                                <option value="multiplier" ${tipoValor === 'multiplier' ? 'selected' : ''}>x</option>
+                                            </select>
+                                        </div>
+                                    </td>
+                                `;
+                            }
+                            
                             if (key === 'indicador') {
                                 return `<td class="px-4 py-2 border-b border-white/5 text-left font-medium whitespace-nowrap">${value || '-'}</td>`;
                             }
-                            if (kind === 'currency') {
-                                return `<td class="px-4 py-2 border-b border-white/5 text-right">${formatCurrency(value)}</td>`;
-                            }
-                            if (kind === 'percentage') {
+                            
+                            // Diferença percentual sempre usa %
+                            if (key === 'diferenca_percentual') {
                                 return `<td class="px-4 py-2 border-b border-white/5 text-right">${formatPercentage(value)}</td>`;
                             }
-                            return `<td class="px-4 py-2 border-b border-white/5 text-right">${value ?? '-'}</td>`;
+                            
+                            // Outras colunas usam o tipo_valor do indicador
+                            return `<td class="px-4 py-2 border-b border-white/5 text-right">${formatValueByType(value, tipoValor)}</td>`;
                         })
                         .join('');
                     return `<tr>${cells}</tr>`;
@@ -195,6 +298,59 @@
                     <tbody>${rows}</tbody>
                 </table>
             `;
+
+            // Bind change events e hover effects para os selects de tipo
+            tableWrapper.querySelectorAll('[data-tipo-select]').forEach((select) => {
+                const selectStyles = getSelectStyles();
+                
+                // Hover effects
+                select.addEventListener('mouseenter', () => {
+                    select.style.background = selectStyles.bgHover;
+                    select.style.borderColor = selectStyles.borderHover;
+                });
+                
+                select.addEventListener('mouseleave', () => {
+                    select.style.background = selectStyles.bg;
+                    select.style.borderColor = selectStyles.border;
+                });
+                
+                // Focus effects
+                select.addEventListener('focus', () => {
+                    select.style.borderColor = selectStyles.borderFocus;
+                    select.style.boxShadow = selectStyles.shadowFocus;
+                });
+                
+                select.addEventListener('blur', () => {
+                    select.style.borderColor = selectStyles.border;
+                    select.style.boxShadow = selectStyles.shadow;
+                });
+                
+                // Change event
+                select.addEventListener('change', async (e) => {
+                    const indicadorNome = e.target.dataset.indicador;
+                    const novoTipo = e.target.value;
+                    
+                    try {
+                        await apiRequest(
+                            `/api/workflows/${workflow.id}/balancete/indicador/${encodeURIComponent(indicadorNome)}/tipo`,
+                            'PATCH',
+                            { tipo_valor: novoTipo }
+                        );
+                        
+                        // Atualizar estado local
+                        const record = state.dataset.records.find(r => r.indicador === indicadorNome);
+                        if (record) {
+                            record.tipo_valor = novoTipo;
+                        }
+                        
+                        // Re-renderizar tabela para aplicar nova formatação
+                        renderBalancete();
+                    } catch (error) {
+                        alert(`Erro ao atualizar tipo: ${error.message}`);
+                        e.target.value = record?.tipo_valor || 'currency';
+                    }
+                });
+            });
         }
     }
 

@@ -99,24 +99,44 @@ def _build_payload(df: pd.DataFrame) -> Dict[str, Any]:
     df[periodo1_col] = _convert_numeric(df[periodo1_col])
     df[periodo2_col] = _convert_numeric(df[periodo2_col])
 
+    # Colunas opcionais vindas do arquivo para diferença absoluta e percentual.
+    # Quando existirem, usamos os valores diretamente, apenas convertendo para número,
+    # sem recalcular sinal.
+    diff_abs_col = None
+    diff_pct_col = None
+
+    if len(df.columns) >= 4:
+        diff_abs_col = df.columns[3]
+        df[diff_abs_col] = _convert_numeric(df[diff_abs_col])
+    if len(df.columns) >= 5:
+        diff_pct_col = df.columns[4]
+        df[diff_pct_col] = _convert_numeric(df[diff_pct_col])
+
     indicadores = []
     for _, row in df.iterrows():
         valor1 = row[periodo1_col]
         valor2 = row[periodo2_col]
 
-        diff_abs = None
-        if pd.notna(valor1) and pd.notna(valor2):
-            diff_abs = valor2 - valor1
-
-        if diff_abs is not None and pd.isna(diff_abs):
-            diff_abs = None
-
-        if valor1 in [None, 0] or pd.isna(valor1):
-            diff_pct = None
-        elif pd.isna(valor2):
-            diff_pct = None
+        # Diferença absoluta: prioriza valor fornecido no arquivo.
+        if diff_abs_col is not None:
+            diff_abs = row[diff_abs_col]
         else:
-            diff_pct = ((valor2 - valor1) / valor1) * 100
+            diff_abs = None
+            if pd.notna(valor1) and pd.notna(valor2):
+                diff_abs = valor2 - valor1
+            if diff_abs is not None and pd.isna(diff_abs):
+                diff_abs = None
+
+        # Diferença percentual: prioriza valor fornecido no arquivo.
+        if diff_pct_col is not None:
+            diff_pct = row[diff_pct_col]
+        else:
+            if valor1 in [None, 0] or pd.isna(valor1):
+                diff_pct = None
+            elif pd.isna(valor2):
+                diff_pct = None
+            else:
+                diff_pct = ((valor2 - valor1) / valor1) * 100
 
         tendencia = 'flat'
         if diff_abs is not None:
@@ -131,7 +151,8 @@ def _build_payload(df: pd.DataFrame) -> Dict[str, Any]:
             'valor_periodo_2': None if pd.isna(valor2) else float(valor2),
             'diferenca_absoluta': None if diff_abs is None else float(diff_abs),
             'diferenca_percentual': None if diff_pct is None or pd.isna(diff_pct) else float(diff_pct),
-            'tendencia': tendencia
+            'tendencia': tendencia,
+            'tipo_valor': 'currency'  # Padrão: R$. Pode ser 'currency', 'percentage', 'multiplier'
         })
 
     return {

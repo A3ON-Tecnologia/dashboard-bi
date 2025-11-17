@@ -4,7 +4,7 @@
         return;
     }
 
-    const { apiRequest, formatCurrency, formatPercentage } = window.dashboardUtils;
+    const { apiRequest, formatCurrency, formatPercentage, formatMultiplier, formatValueByType } = window.dashboardUtils;
     const ChartJs = window.Chart;
 
     if (ChartJs && ChartJs.register && window.ChartDataLabels) {
@@ -105,16 +105,17 @@
         const dataset = chart.data.datasets[datasetIndex];
         const label = dataset.label || '';
         const value = dataset.data[dataIndex];
-        const valueKind = dataset.valueKind || 'number';
         const indicatorLabel = chart.data.labels[dataIndex];
         
-        let formattedValue = '';
-        if (valueKind === 'currency') {
-            formattedValue = formatCurrency(value);
-        } else if (valueKind === 'percentage') {
+        // Verificar se é diferença percentual (sempre usa %)
+        let formattedValue;
+        if (dataset.metricKey === 'diferenca_percentual') {
             formattedValue = formatPercentage(value);
         } else {
-            formattedValue = value !== null ? value.toLocaleString('pt-BR', { maximumFractionDigits: 2 }) : '';
+            // Usar tipo do indicador para outras métricas
+            const tipos = chart.options.indicatorTipos || {};
+            const tipoValor = tipos[indicatorLabel] || tipos[label] || 'currency';
+            formattedValue = formatValueByType(value, tipoValor);
         }
 
         tooltip.innerHTML = `
@@ -598,16 +599,70 @@
             s.label?.toLowerCase().includes('período') ||
             s.label?.toLowerCase().includes('periodo')
         );
+        
+        console.log('prepareLineAreaChartData - chartConfig:', chartConfig);
+        console.log('prepareLineAreaChartData - periodMetrics:', periodMetrics);
+        console.log('prepareLineAreaChartData - labels originais:', labels);
+
+        // Ajuste: sempre que houver mais de uma métrica,
+        // reproduzir o layout da pré-visualização (eixo X = métricas/períodos,
+        // uma linha por indicador), independentemente das keys usadas.
+        if (series.length > 1) {
+            const temporalLabels = series.map(s => s.label);
+            const numIndicators = labels.length;
+            const combinedSeries = [];
+            const indicatorColorMap =
+                chartConfig.indicatorColors ||
+                (chartConfig.options && chartConfig.options.indicator_colors) ||
+                {};
+
+            console.log('prepareLineAreaChartData - indicatorColorMap (ajustado):', indicatorColorMap);
+            console.log('prepareLineAreaChartData - numIndicators (ajustado):', numIndicators);
+
+            for (let i = 0; i < numIndicators; i++) {
+                const indicatorLabel = labels[i];
+                const corPersonalizada =
+                    indicatorColorMap[indicatorLabel] || COLOR_PALETTE[i % COLOR_PALETTE.length];
+                const temporalValues = series.map(metric => metric.values[i]);
+
+                console.log(`Indicador ${i} (ajustado): ${indicatorLabel}, cor: ${corPersonalizada}, valores:`, temporalValues);
+
+                combinedSeries.push({
+                    label: indicatorLabel,
+                    values: temporalValues,
+                    // Usar a cor do indicador para a linha
+                    color: corPersonalizada,
+                    value_kind: series[0]?.value_kind || 'number'
+                });
+            }
+
+            labels = temporalLabels;
+            series = combinedSeries;
+
+            console.log('prepareLineAreaChartData - labels finais (ajustado):', labels);
+            console.log('prepareLineAreaChartData - series finais (ajustado):', series);
+
+            // Já montamos a estrutura final; não precisamos da lógica antiga abaixo.
+            return { labels, series };
+        }
+        
         if (periodMetrics.length === series.length && periodMetrics.length > 1) {
             // labels = períodos, datasets = indicadores
             const temporalLabels = periodMetrics.map(s => s.label);
             const numIndicators = labels.length;
             const combinedSeries = [];
             const indicatorColorMap = (chartConfig.indicatorColors) || (chartConfig.options && chartConfig.options.indicator_colors) || {};
+            
+            console.log('prepareLineAreaChartData - indicatorColorMap:', indicatorColorMap);
+            console.log('prepareLineAreaChartData - numIndicators:', numIndicators);
+            
             for (let i = 0; i < numIndicators; i++) {
                 const indicatorLabel = labels[i];
                 const corPersonalizada = indicatorColorMap[indicatorLabel] || COLOR_PALETTE[i % COLOR_PALETTE.length];
                 const temporalValues = periodMetrics.map(metric => metric.values[i]);
+                
+                console.log(`Indicador ${i}: ${indicatorLabel}, cor: ${corPersonalizada}, valores:`, temporalValues);
+                
                 combinedSeries.push({
                     label: indicatorLabel,
                     values: temporalValues,
@@ -618,7 +673,59 @@
             }
             labels = temporalLabels;
             series = combinedSeries;
+            
+            console.log('prepareLineAreaChartData - labels finais:', labels);
+            console.log('prepareLineAreaChartData - series finais:', series);
         }
+        return { labels, series };
+    }
+
+    // Versão ajustada para garantir que gráficos de linha/área
+    // fiquem iguais à pré-visualização (eixo X = métricas/períodos,
+    // uma linha por indicador quando houver mais de uma métrica).
+    function prepareLineAreaChartDataV2(chartData, chartConfig) {
+        let labels = chartData.labels || [];   // indicadores
+        let series = chartData.series || [];   // métricas / períodos
+
+        console.log('prepareLineAreaChartDataV2 - chartConfig:', chartConfig);
+        console.log('prepareLineAreaChartDataV2 - series originais:', series);
+        console.log('prepareLineAreaChartDataV2 - labels originais:', labels);
+
+        if (series.length > 1) {
+            const temporalLabels = series.map(s => s.label);
+            const numIndicators = labels.length;
+            const combinedSeries = [];
+            const indicatorColorMap =
+                chartConfig.indicatorColors ||
+                (chartConfig.options && chartConfig.options.indicator_colors) ||
+                {};
+
+            console.log('prepareLineAreaChartDataV2 - indicatorColorMap:', indicatorColorMap);
+            console.log('prepareLineAreaChartDataV2 - numIndicators:', numIndicators);
+
+            for (let i = 0; i < numIndicators; i++) {
+                const indicatorLabel = labels[i];
+                const corPersonalizada =
+                    indicatorColorMap[indicatorLabel] || COLOR_PALETTE[i % COLOR_PALETTE.length];
+                const temporalValues = series.map(metric => metric.values[i]);
+
+                console.log(`Indicador ${i}: ${indicatorLabel}, cor: ${corPersonalizada}, valores:`, temporalValues);
+
+                combinedSeries.push({
+                    label: indicatorLabel,
+                    values: temporalValues,
+                    color: corPersonalizada,
+                    value_kind: series[0]?.value_kind || 'number'
+                });
+            }
+
+            labels = temporalLabels;
+            series = combinedSeries;
+
+            console.log('prepareLineAreaChartDataV2 - labels finais:', labels);
+            console.log('prepareLineAreaChartDataV2 - series finais:', series);
+        }
+
         return { labels, series };
     }
     
@@ -666,6 +773,7 @@
         const chartConfig = chart.config || chart.chart || chart;
         const chartType = chartConfig.chart_type || chartConfig.type || 'bar';
         const isBalancete = window.__WORKFLOW__?.tipo === 'balancete' || state?.workflowType === 'balancete';
+        const indicatorTipos = chartData.indicator_tipos || {};
 
         let labels = [];
         let series = [];
@@ -687,14 +795,37 @@
                 backgroundColor: color,
                 borderColor: color,
                 borderWidth: 2,
-                valueKind: s.value_kind || 'number'
+                valueKind: s.value_kind || 'number',
+                metricKey: s.key  // Adicionar key da métrica para identificar diferenca_percentual
             };
             if (chartType === 'area') {
                 dataset.fill = true;
                 dataset.tension = 0.4;
+                dataset.borderWidth = 3;
+                // Adicionar pontos visíveis
+                dataset.pointRadius = 6;
+                dataset.pointHoverRadius = 8;
+                dataset.pointBackgroundColor = color;
+                dataset.pointBorderColor = '#fff';
+                dataset.pointBorderWidth = 2;
+                dataset.pointHoverBackgroundColor = color;
+                dataset.pointHoverBorderColor = '#fff';
+                dataset.pointHoverBorderWidth = 3;
+                // Opacidade do preenchimento
+                dataset.backgroundColor = color + '40'; // 25% de opacidade
             } else if (chartType === 'line') {
                 dataset.fill = false;
                 dataset.tension = 0.4;
+                dataset.borderWidth = 4;
+                // Adicionar pontos visíveis e maiores
+                dataset.pointRadius = 6;
+                dataset.pointHoverRadius = 9;
+                dataset.pointBackgroundColor = color;
+                dataset.pointBorderColor = '#fff';
+                dataset.pointBorderWidth = 2;
+                dataset.pointHoverBackgroundColor = color;
+                dataset.pointHoverBorderColor = '#fff';
+                dataset.pointHoverBorderWidth = 3;
             } else if (chartType === 'bar' || chartType === 'bar-horizontal') {
                 dataset.borderRadius = 8;
                 dataset.borderSkipped = false;
@@ -724,7 +855,12 @@
                     font: {
                         size: 16,
                         weight: 'bold'
-                    }
+                    },
+                    padding: 15,
+                    usePointStyle: true,
+                    pointStyle: 'circle',
+                    boxWidth: 12,
+                    boxHeight: 12
                 }
             },
             tooltip: {
@@ -740,6 +876,9 @@
                     weight: 'bold'
                 },
                 padding: 12,
+                backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                borderColor: 'rgba(255, 255, 255, 0.2)',
+                borderWidth: 1
             }
         };
         if (chartType === 'bar' || chartType === 'bar-horizontal') {
@@ -749,27 +888,53 @@
                 font: { weight: 'bold', size: 14 },
                 formatter: (value, context) => {
                     if (value == null) return '';
-                    // Formatação monetária com R$
-                    return 'R$ ' + value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    
+                    // Verificar se é diferença percentual (sempre usa %)
+                    const metricKey = context.dataset.metricKey;
+                    if (metricKey === 'diferenca_percentual') {
+                        return formatPercentage(value);
+                    }
+                    
+                    // Usar tipo do indicador para outras métricas
+                    const tipos = context.chart.options.indicatorTipos || {};
+                    const indicadorNome = context.chart.data.labels[context.dataIndex];
+                    const tipoValor = tipos[indicadorNome] || 'currency';
+                    return formatValueByType(value, tipoValor);
                 },
             };
         } else if (isBalancete && (chartType === 'line' || chartType === 'area')) {
             // Configuração de datalabels para linha e área do balancete
             pluginsConfig.datalabels = {
                 display: true,
-                color: '#fff',
-                font: { weight: 'bold', size: 12 },
+                color: function(context) {
+                    // Usar a cor da linha/área para o label
+                    return context.dataset.borderColor || '#fff';
+                },
+                backgroundColor: function(context) {
+                    // Fundo semi-transparente para melhor legibilidade
+                    const color = context.dataset.borderColor || '#000';
+                    return color + '80'; // 50% de opacidade
+                },
+                borderRadius: 4,
+                padding: 4,
+                font: { weight: 'bold', size: 13 },
                 align: 'top',
                 anchor: 'end',
+                offset: 4,
                 formatter: (value, context) => {
                     if (value == null) return '';
-                    // Formatação monetária compacta
-                    if (Math.abs(value) >= 1000000) {
-                        return 'R$ ' + (value / 1000000).toFixed(2) + 'M';
-                    } else if (Math.abs(value) >= 1000) {
-                        return 'R$ ' + (value / 1000).toFixed(2) + 'K';
+                    
+                    // Verificar se é diferença percentual (sempre usa %)
+                    const metricKey = context.dataset.metricKey;
+                    if (metricKey === 'diferenca_percentual') {
+                        return formatPercentage(value);
                     }
-                    return 'R$ ' + value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    
+                    // Para linha/área, o label do dataset é o nome do indicador
+                    const tipos = context.chart.options.indicatorTipos || {};
+                    const indicadorNome = context.dataset.label;
+                    const tipoValor = tipos[indicadorNome] || 'currency';
+                    return formatValueByType(value, tipoValor);
                 },
             };
         }
@@ -780,15 +945,21 @@
             x: {
                 beginAtZero: true,
                 ticks: { 
-                    color: 'rgba(255,255,255,0.9)',
-                    padding: 10
+                    color: 'rgba(255,255,255,0.95)',
+                    padding: 12,
+                    font: {
+                        size: 13,
+                        weight: 'bold'
+                    }
                 },
                 grid: {
                     display: true,
                     drawBorder: true,
                     drawOnChartArea: true,
                     drawTicks: true,
-                    offset: true
+                    offset: true,
+                    color: 'rgba(255,255,255,0.15)',
+                    lineWidth: 1
                 },
                 // Aplicar offset para gráficos de barra e linha/área
                 offset: true
@@ -796,14 +967,20 @@
             y: {
                 beginAtZero: true,
                 ticks: { 
-                    color: 'rgba(255,255,255,0.9)',
-                    padding: 10
+                    color: 'rgba(255,255,255,0.95)',
+                    padding: 12,
+                    font: {
+                        size: 13,
+                        weight: 'bold'
+                    }
                 },
                 grid: {
                     display: true,
                     drawBorder: true,
                     drawOnChartArea: true,
-                    drawTicks: true
+                    drawTicks: true,
+                    color: 'rgba(255,255,255,0.15)',
+                    lineWidth: 1
                 }
             }
         };
@@ -838,7 +1015,9 @@
                 scales: scalesConfig,
                 // Controlar espessura das barras
                 barPercentage: chartType === 'bar-horizontal' ? 0.65 : 0.5,
-                categoryPercentage: chartType === 'bar-horizontal' ? 0.7 : 0.85
+                categoryPercentage: chartType === 'bar-horizontal' ? 0.7 : 0.85,
+                // Adicionar indicatorTipos para uso nos formatters
+                indicatorTipos: indicatorTipos
             },
         };
     }
@@ -1578,9 +1757,31 @@
             if (config.type === 'area') {
                 processed.fill = true;
                 processed.tension = 0.4;
+                processed.borderWidth = 3;
+                // Adicionar pontos visíveis
+                processed.pointRadius = 6;
+                processed.pointHoverRadius = 8;
+                processed.pointBackgroundColor = processed.borderColor;
+                processed.pointBorderColor = '#fff';
+                processed.pointBorderWidth = 2;
+                processed.pointHoverBackgroundColor = processed.borderColor;
+                processed.pointHoverBorderColor = '#fff';
+                processed.pointHoverBorderWidth = 3;
+                // Opacidade do preenchimento
+                processed.backgroundColor = processed.borderColor + '40';
             } else if (config.type === 'line') {
                 processed.fill = false;
                 processed.tension = 0.4;
+                processed.borderWidth = 4;
+                // Adicionar pontos visíveis e maiores
+                processed.pointRadius = 6;
+                processed.pointHoverRadius = 9;
+                processed.pointBackgroundColor = processed.borderColor;
+                processed.pointBorderColor = '#fff';
+                processed.pointBorderWidth = 2;
+                processed.pointHoverBackgroundColor = processed.borderColor;
+                processed.pointHoverBorderColor = '#fff';
+                processed.pointHoverBorderWidth = 3;
             } else if (config.type === 'bar' || config.type === 'bar-horizontal') {
                 processed.borderWidth = 3;
                 processed.borderRadius = 8;
@@ -1829,8 +2030,10 @@
                 }
                 payload.indicadores = state.modal.config.indicators;
                 payload.metricas = state.modal.config.metrics;
-                payload.indicador_cores = state.modal.config.indicatorColors || {};
+                // Salvar cores dos indicadores nas options
+                payload.options.indicator_colors = state.modal.config.indicatorColors || {};
                 console.log('Métricas sendo salvas:', payload.metricas);
+                console.log('Cores dos indicadores sendo salvas:', payload.options.indicator_colors);
             } else if (state.workflowType === 'analise_jp') {
                 if (!state.modal.config.category) {
                     if (modalFeedback) {
