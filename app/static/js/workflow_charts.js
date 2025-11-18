@@ -940,6 +940,40 @@
         }
 
         // Configurar scales com base nas opções do gráfico
+        // Override de datalabels para linha/área do balancete
+        if (isBalancete && (chartType === 'line' || chartType === 'area')) {
+            pluginsConfig.datalabels = {
+                display: true,
+                color: '#fff',
+                backgroundColor: function (context) {
+                    const color = context.dataset.borderColor || context.dataset.backgroundColor || '#000';
+                    return color;
+                },
+                borderRadius: 4,
+                padding: 4,
+                font: { weight: 'bold', size: 13 },
+                // empilhar labels acima do ponto, uma acima da outra
+                align: 'top',
+                anchor: 'center',
+                offset: function (context) {
+                    const base = 6;   // distância mínima acima do ponto
+                    const step = 18;  // altura aproximada de uma label
+                    return base + (context.datasetIndex || 0) * step;
+                },
+                formatter: (value, context) => {
+                    if (value == null) return '';
+                    const metricKey = context.dataset.metricKey;
+                    if (metricKey === 'diferenca_percentual') {
+                        return formatPercentage(value);
+                    }
+                    const tipos = context.chart.options.indicatorTipos || {};
+                    const indicadorNome = context.dataset.label;
+                    const tipoValor = tipos[indicadorNome] || 'currency';
+                    return formatValueByType(value, tipoValor);
+                },
+            };
+        }
+
         const chartOptions = chart.config?.options || chart.chart?.options || chart.options || {};
         const scalesConfig = {
             x: {
@@ -1013,9 +1047,9 @@
                 },
                 plugins: pluginsConfig,
                 scales: scalesConfig,
-                // Controlar espessura das barras
-                barPercentage: chartType === 'bar-horizontal' ? 0.65 : 0.5,
-                categoryPercentage: chartType === 'bar-horizontal' ? 0.7 : 0.85,
+                // Controlar espessura das barras (mesma para verticais e horizontais)
+                barPercentage: 0.65,
+                categoryPercentage: 0.7,
                 // Adicionar indicatorTipos para uso nos formatters
                 indicatorTipos: indicatorTipos
             },
@@ -1860,9 +1894,25 @@
                     datalabels: { 
                         display: config.options.dataLabels,
                         color: '#fff',
+                        backgroundColor: function(context) {
+                            const ds = context.dataset;
+                            const color = ds.borderColor || ds.backgroundColor || '#000';
+                            return color;
+                        },
+                        borderRadius: 4,
+                        padding: 4,
                         font: { weight: 'bold', size: (config.type === 'line' || config.type === 'area') ? 12 : 14 },
+                        // empilhar labels acima do ponto na pré-visualização também
                         align: (config.type === 'line' || config.type === 'area') ? 'top' : 'center',
-                        anchor: (config.type === 'line' || config.type === 'area') ? 'end' : 'center',
+                        anchor: 'center',
+                        offset: function(context) {
+                            if (config.type === 'line' || config.type === 'area') {
+                                const base = 6;
+                                const step = 18;
+                                return base + (context.datasetIndex || 0) * step;
+                            }
+                            return 0;
+                        },
                         formatter: (value, context) => {
                             if (value === null || value === undefined) return '';
                             
@@ -1950,8 +2000,9 @@
                     }
                 },
                 // Controlar espessura das barras
-                barPercentage: config.type === 'bar-horizontal' ? 0.65 : 0.5,
-                categoryPercentage: config.type === 'bar-horizontal' ? 0.7 : 0.85
+                // Usar a mesma espessura para barras verticais e horizontais
+                barPercentage: 0.65,
+                categoryPercentage: 0.7
             }
         };
         
