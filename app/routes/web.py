@@ -91,3 +91,35 @@ def empresa_detail_view(empresa_id: int):
         workflows=[w.to_dict() for w in workflows],
         theme_options=_theme_options(),
     )
+
+
+# -----------------------------------------------------------------------------
+# URL amigáveis (redirect helpers para suportar refresh nas URLs 'bonitas')
+# -----------------------------------------------------------------------------
+
+
+def _slugify(value: str) -> str:
+    import re
+    text = (value or "").strip().lower()
+    text = re.sub(r"[^a-z0-9]+", "-", text)
+    return text.strip("-") or "item"
+
+
+@web_bp.route("/empresas/<empresa_slug>")
+def empresa_slug_redirect(empresa_slug: str):
+    # Redireciona slug de empresa para a rota canônica por ID
+    empresas = Empresa.query.all()
+    for e in empresas:
+        if _slugify(e.nome) == empresa_slug:
+            return redirect(url_for("web.empresa_detail_view", empresa_id=e.id), code=301)
+    return redirect(url_for("web.list_empresas_view"), code=302)
+
+
+@web_bp.route("/empresas/<empresa_slug>/<int:workflow_id>")
+def workflow_slug_redirect(empresa_slug: str, workflow_id: int):
+    return redirect(url_for("web.workflow_detail_view", workflow_id=workflow_id), code=301)
+
+
+@web_bp.route("/empresas/<empresa_slug>/<int:workflow_id>/dashboards")
+def workflow_dashboards_slug_redirect(empresa_slug: str, workflow_id: int):
+    return redirect(url_for("web.workflow_charts_view", workflow_id=workflow_id), code=301)

@@ -117,7 +117,7 @@
                     {% if workflow %}
                     <a href="{{ url_for('web.workflow_detail_view', workflow_id=workflow.id) }}" class="group flex items-center gap-3 px-3 py-2 rounded-lg transition {{ theme.buttons.primary if request.endpoint == 'web.workflow_detail_view' else 'hover:bg-white/10' }}">
                         <span class="w-2 h-2 rounded-full {% if request.endpoint == 'web.workflow_detail_view' %}bg-white{% else %}bg-white/50 group-hover:bg-white{% endif %}"></span>
-                        <span class="font-medium">Dados do Workflow</span>
+                        <span class="font-medium">Uploads Workflows</span>
                     </a>
                     <a href="{{ url_for('web.workflow_charts_view', workflow_id=workflow.id) }}" class="group flex items-center gap-3 px-3 py-2 rounded-lg transition {{ theme.buttons.primary if request.endpoint == 'web.workflow_charts_view' else 'hover:bg-white/10' }}">
                         <span class="w-2 h-2 rounded-full {% if request.endpoint == 'web.workflow_charts_view' %}bg-white{% else %}bg-white/50 group-hover:bg-white{% endif %}"></span>
