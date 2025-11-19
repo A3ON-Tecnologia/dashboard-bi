@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from flask import Blueprint, redirect, render_template, url_for
+from flask import Blueprint, redirect, render_template, url_for, request
 
 from app.models.workflow import Workflow
 from app.models.empresa import Empresa
@@ -123,3 +123,22 @@ def workflow_slug_redirect(empresa_slug: str, workflow_id: int):
 @web_bp.route("/empresas/<empresa_slug>/<int:workflow_id>/dashboards")
 def workflow_dashboards_slug_redirect(empresa_slug: str, workflow_id: int):
     return redirect(url_for("web.workflow_charts_view", workflow_id=workflow_id), code=301)
+
+
+# -----------------------------------------------------------------------------
+# Erros (404)
+# -----------------------------------------------------------------------------
+
+@web_bp.app_errorhandler(404)
+def handle_404(error):
+    theme = get_theme_context()
+    attempted = request.path
+    return (
+        render_template(
+            "404.html",
+            theme=theme,
+            attempted_path=attempted,
+            theme_options=_theme_options(),
+        ),
+        404,
+    )

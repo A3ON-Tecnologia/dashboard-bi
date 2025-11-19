@@ -1,0 +1,27 @@
+﻿{% extends "layout.html" %}
+
+{% block title %}Página não encontrada{% endblock %}
+
+{% block content %}
+<section class="min-h-[60vh] flex items-center justify-center">
+  <div class="w-full max-w-2xl {{ theme.modal }} rounded-2xl border border-white/10 shadow-2xl px-8 py-10 text-center">
+    <div class="mx-auto mb-6 w-16 h-16 rounded-full flex items-center justify-center border border-white/15 bg-white/5">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-9 h-9 text-amber-400">
+        <path fill-rule="evenodd" d="M10.29 3.86c.77-1.33 2.65-1.33 3.42 0l7.51 12.98c.76 1.32-.19 2.96-1.71 2.96H4.49c-1.53 0-2.47-1.64-1.71-2.96l7.51-12.98Zm1.71 4.64a1 1 0 0 1 1 1v4.1a1 1 0 1 1-2 0V9.5a1 1 0 0 1 1-1Zm0 8.5a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5Z" clip-rule="evenodd"/>
+      </svg>
+    </div>
+    <h1 class="text-3xl font-semibold mb-2">Página não encontrada</h1>
+    <p class="opacity-70 mb-6">A URL que você tentou acessar não existe ou foi movida.</p>
+    <div class="mb-8">
+      <code class="px-3 py-2 rounded-lg border border-white/10 bg-white/5 inline-block text-sm">{{ attempted_path }}</code>
+    </div>
+    <div class="flex flex-wrap items-center justify-center gap-3">
+      <a href="{{ url_for('web.list_empresas_view') }}" class="px-5 py-2.5 rounded-lg {{ theme.buttons.primary }} text-sm font-medium">Ir para Empresas</a>
+      <a href="/" class="px-5 py-2.5 rounded-lg border border-white/15 hover:border-white/40 transition text-sm">Voltar ao iní­cio</a>
+    </div>
+    <p class="text-xs opacity-60 mt-6">Se o problema persistir, confira o endereço digitado ou utilize o menu lateral.</p>
+  </div>
+  </section>
+{% endblock %}
+
+

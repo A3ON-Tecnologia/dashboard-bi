@@ -14,7 +14,7 @@
         </div>
         <div class="flex flex-wrap gap-3">
             <a href="{{ url_for('web.workflow_charts_view', workflow_id=workflow.id) }}"
-                class="px-4 py-2 rounded-lg border border-white/15 hover:border-white/40 transition text-sm">Ir para
+                class="inline-flex items-center justify-center gap-2 rounded-lg px-5 py-2.5 font-medium {{ theme.buttons.primary }} transition text-sm">Ir para
                 dashboards</a>
             {% if empresa and empresa.id %}
             <a href="{{ url_for('web.empresa_detail_view', empresa_id=empresa.id) }}"
