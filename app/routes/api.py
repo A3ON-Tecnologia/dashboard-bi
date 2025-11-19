@@ -9,6 +9,7 @@ from sqlalchemy.orm.attributes import flag_modified
 
 from app.extensions import db
 from app.models.workflow import Workflow
+from app.models.empresa import Empresa
 from app.models.arquivo_importado import ArquivoImportado
 from app.models.dashboard import Dashboard
 from app.models.analise_upload import AnaliseUpload
@@ -384,7 +385,11 @@ def set_theme():
 
 @api_bp.get("/workflows")
 def list_workflows():
-    items = Workflow.query.order_by(Workflow.data_criacao.desc()).all()
+    empresa_id = request.args.get("empresa_id", type=int)
+    query = Workflow.query
+    if empresa_id is not None:
+        query = query.filter_by(empresa_id=empresa_id)
+    items = query.order_by(Workflow.data_criacao.desc()).all()
     return jsonify(
         {
             "items": [workflow.to_dict() for workflow in items],
@@ -399,13 +404,14 @@ def create_workflow():
     nome = str(payload.get("nome") or "").strip()
     descricao = str(payload.get("descricao") or "").strip() or None
     tipo = str(payload.get("tipo") or "").strip()
+    empresa_id = payload.get("empresa_id")
 
     if not nome or not tipo:
         return jsonify({"error": "Informe nome e tipo do workflow."}), 400
     if tipo not in WORKFLOW_TYPES:
         return jsonify({"error": "Tipo de workflow inválido."}), 400
 
-    workflow = Workflow(nome=nome, descricao=descricao, tipo=tipo)
+    workflow = Workflow(nome=nome, descricao=descricao, tipo=tipo, empresa_id=empresa_id)
     db.session.add(workflow)
     try:
         db.session.commit()
@@ -430,6 +436,7 @@ def update_workflow(workflow_id: int):
     nome = str(payload.get("nome") or "").strip()
     descricao = str(payload.get("descricao") or "").strip() or None
     tipo = str(payload.get("tipo") or "").strip()
+    empresa_id = payload.get("empresa_id")
 
     if nome:
         workflow.nome = nome
@@ -437,6 +444,14 @@ def update_workflow(workflow_id: int):
         workflow.descricao = descricao
     if tipo and tipo in WORKFLOW_TYPES:
         workflow.tipo = tipo
+    if "empresa_id" in payload:
+        if empresa_id is None:
+            workflow.empresa_id = None
+        else:
+            if not isinstance(empresa_id, int):
+                return jsonify({"error": "empresa_id deve ser inteiro."}), 400
+            Empresa.query.get_or_404(empresa_id)
+            workflow.empresa_id = empresa_id
 
     try:
         db.session.commit()
@@ -1035,3 +1050,79 @@ def delete_analise_chart(workflow_id: int, chart_id: int):
     db.session.commit()
 
     return jsonify({"message": "Gráfico removido com sucesso."})
+
+
+# -----------------------------------------------------------------------------
+# Empresas
+# -----------------------------------------------------------------------------
+
+
+@api_bp.get("/empresas")
+def list_empresas():
+    items = Empresa.query.order_by(Empresa.created_at.desc()).all()
+    return jsonify({
+        "items": [e.to_dict() for e in items],
+        "count": len(items),
+    })
+
+
+@api_bp.post("/empresas")
+def create_empresa():
+    payload = request.get_json(silent=True) or {}
+    nome = str(payload.get("nome") or "").strip()
+    descricao = str(payload.get("descricao") or "").strip() or None
+    if not nome:
+        return jsonify({"error": "Informe o nome da empresa."}), 400
+    empresa = Empresa(nome=nome, descricao=descricao)
+    db.session.add(empresa)
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({"error": "Já existe uma empresa com este nome."}), 409
+    return jsonify({"message": "Empresa criada com sucesso.", "empresa": empresa.to_dict()}), 201
+
+
+@api_bp.get("/empresas/<int:empresa_id>")
+def retrieve_empresa(empresa_id: int):
+    empresa = Empresa.query.get_or_404(empresa_id)
+    return jsonify(empresa.to_dict())
+
+
+@api_bp.put("/empresas/<int:empresa_id>")
+def update_empresa(empresa_id: int):
+    empresa = Empresa.query.get_or_404(empresa_id)
+    payload = request.get_json(silent=True) or {}
+    nome = str(payload.get("nome") or "").strip()
+    descricao = str(payload.get("descricao") or "").strip() or None
+    if nome:
+        empresa.nome = nome
+    if descricao is not None or "descricao" in payload:
+        empresa.descricao = descricao
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({"error": "Já existe uma empresa com este nome."}), 409
+    return jsonify({"message": "Empresa atualizada com sucesso.", "empresa": empresa.to_dict()})
+
+
+@api_bp.delete("/empresas/<int:empresa_id>")
+def delete_empresa(empresa_id: int):
+    empresa = Empresa.query.get_or_404(empresa_id)
+    # Se desejar impedir exclusão com workflows vinculados, descomente:
+    # if empresa.workflows.count() > 0:
+    #     return jsonify({"error": "Não é possível excluir empresa com workflows vinculados."}), 400
+    db.session.delete(empresa)
+    db.session.commit()
+    return jsonify({"message": "Empresa removida com sucesso."})
+
+
+@api_bp.get("/empresas/<int:empresa_id>/workflows")
+def list_empresas_workflows(empresa_id: int):
+    Empresa.query.get_or_404(empresa_id)
+    items = Workflow.query.filter_by(empresa_id=empresa_id).order_by(Workflow.data_criacao.desc()).all()
+    return jsonify({
+        "items": [w.to_dict() for w in items],
+        "count": len(items),
+    })

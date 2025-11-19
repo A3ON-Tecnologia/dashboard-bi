@@ -101,10 +101,19 @@
                     <img src="{{ url_for('static', filename='images/chart-logo.png') }}" alt="Logo" class="h-28 w-auto cursor-pointer hover:scale-110 transition-all duration-200" />
                 </div>
                 <nav class="px-4 space-y-1 mt-4">
-                    <a href="{{ url_for('web.list_workflows_view') }}" class="group flex items-center gap-3 px-3 py-2 rounded-lg transition {{ theme.buttons.primary if request.endpoint == 'web.list_workflows_view' else 'hover:bg-white/10' }}">
-                        <span class="w-2 h-2 rounded-full {% if request.endpoint == 'web.list_workflows_view' %}bg-white{% else %}bg-white/50 group-hover:bg-white{% endif %}"></span>
+                    <a href="{{ url_for('web.list_empresas_view') }}" class="group flex items-center gap-3 px-3 py-2 rounded-lg transition {{ theme.buttons.primary if request.endpoint == 'web.list_empresas_view' or request.endpoint == 'web.empresa_detail_view' else 'hover:bg-white/10' }}">
+                        <span class="w-2 h-2 rounded-full {% if request.endpoint in ['web.list_empresas_view', 'web.empresa_detail_view'] %}bg-white{% else %}bg-white/50 group-hover:bg-white{% endif %}"></span>
+                        <span class="font-medium">Empresas</span>
+                    </a>
+                    {# Quando dentro de uma empresa (ou dentro de um workflow com empresa), mostrar atalho para Workflows da empresa #}
+                    {% set __empresa_id__ = (empresa.id if empresa else (workflow.empresa_id if workflow and workflow.empresa_id else None)) %}
+                    {% if __empresa_id__ %}
+                    <a href="{{ url_for('web.empresa_detail_view', empresa_id=__empresa_id__) }}" class="group flex items-center gap-3 px-3 py-2 rounded-lg transition {{ theme.buttons.primary if request.endpoint == 'web.empresa_detail_view' else 'hover:bg-white/10' }}">
+                        <span class="w-2 h-2 rounded-full {% if request.endpoint == 'web.empresa_detail_view' %}bg-white{% else %}bg-white/50 group-hover:bg-white{% endif %}"></span>
                         <span class="font-medium">Workflows</span>
                     </a>
+                    {% endif %}
+                    {# Removido o atalho global de Workflows; só aparece quando dentro de uma empresa #}
                     {% if workflow %}
                     <a href="{{ url_for('web.workflow_detail_view', workflow_id=workflow.id) }}" class="group flex items-center gap-3 px-3 py-2 rounded-lg transition {{ theme.buttons.primary if request.endpoint == 'web.workflow_detail_view' else 'hover:bg-white/10' }}">
                         <span class="w-2 h-2 rounded-full {% if request.endpoint == 'web.workflow_detail_view' %}bg-white{% else %}bg-white/50 group-hover:bg-white{% endif %}"></span>

@@ -1,0 +1,146 @@
+{% extends "layout.html" %}
+
+{% block title %}Empresas{% endblock %}
+
+{% block content %}
+<section class="space-y-8">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <div>
+            <h1 class="text-3xl font-semibold mt-1">Empresas</h1>
+        </div>
+        <button id="openCreateEmpresaModal" class="inline-flex items-center justify-center gap-2 rounded-lg px-5 py-2.5 font-medium {{ theme.buttons.primary }} transition">
+            <span>+ Criar empresa</span>
+        </button>
+    </div>
+
+    <div class="rounded-2xl border border-white/10 bg-white/5 backdrop-blur px-6 py-6">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+            <div>
+                <h2 class="text-xl font-semibold">Minhas empresas</h2>
+                <p class="text-sm opacity-70">{{ empresas|length }} empresa(s) encontradas.</p>
+            </div>
+        </div>
+
+        <div id="empresaList" class="grid md:grid-cols-2 gap-4">
+            {% for item in empresas %}
+            <article class="rounded-xl border border-white/10 bg-black/10 backdrop-blur px-5 py-4 flex flex-col gap-4">
+                <div>
+                    <h3 class="text-lg font-semibold">{{ item.nome }}</h3>
+                    <p class="text-sm opacity-70">{{ item.descricao or 'Sem descrição informada.' }}</p>
+                </div>
+                <div class="flex flex-wrap gap-3">
+                    <a href="{{ url_for('web.empresa_detail_view', empresa_id=item.id) }}" class="inline-flex items-center justify-center px-4 py-2 rounded-lg border !border-emerald-400/40 !text-emerald-200 hover:!border-emerald-400 hover:!text-emerald-100 transition text-sm">Abrir</a>
+                    <button data-action="edit-empresa" data-empresa-id="{{ item.id }}" class="px-4 py-2 rounded-lg border border-blue-400/40 text-blue-200 hover:border-blue-400 hover:text-blue-100 transition text-sm">
+                        Editar
+                    </button>
+                    <button data-action="delete-empresa" data-empresa-id="{{ item.id }}" class="px-4 py-2 rounded-lg border border-red-400/40 text-red-200 hover:border-red-400 hover:text-red-100 transition text-sm">
+                        Excluir
+                    </button>
+                </div>
+            </article>
+            {% else %}
+            <p class="text-sm opacity-70">Nenhuma empresa cadastrada até o momento.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+</section>
+
+<!-- Modal criar empresa -->
+<div id="createEmpresaModal" class="modal-backdrop fixed inset-0 bg-black/60 hidden z-50">
+    <div class="w-full h-full flex items-center justify-center p-6">
+        <div class="modal-content max-w-lg w-full {{ theme.modal }} rounded-2xl shadow-2xl border border-white/10">
+            <div class="px-6 py-4 border-b border-white/10">
+                <h2 class="text-lg font-semibold">Criar nova empresa</h2>
+            </div>
+            <div class="px-6 py-6">
+                <form id="createEmpresaForm" class="grid gap-4">
+                    <label class="grid gap-2">
+                        <span class="text-sm font-medium opacity-80">Nome da empresa</span>
+                        <input type="text" id="createEmpresaNome" required maxlength="255" class="rounded-lg border border-white/20 bg-transparent px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/60" placeholder="Ex.: Empresa XPTO" />
+                    </label>
+                    <label class="grid gap-2">
+                        <span class="text-sm font-medium opacity-80">Descrição</span>
+                        <textarea id="createEmpresaDescricao" rows="3" class="rounded-lg border border-white/20 bg-transparent px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/60" placeholder="Informações adicionais"></textarea>
+                    </label>
+                    <p id="createEmpresaFeedback" class="text-sm hidden"></p>
+                </form>
+            </div>
+            <div class="px-6 py-4 border-t border-white/10 flex gap-3 justify-end">
+                <button id="cancelCreateEmpresa" class="px-4 py-2 rounded-lg border border-white/20 hover:border-white/40 transition text-sm">
+                    Cancelar
+                </button>
+                <button id="confirmCreateEmpresa" class="px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-medium transition text-sm">
+                    Criar empresa
+                </button>
+            </div>
+        </div>
+    </div>
+    </div>
+
+<!-- Modal editar empresa -->
+<div id="editEmpresaModal" class="modal-backdrop fixed inset-0 bg-black/60 hidden z-50">
+    <div class="w-full h-full flex items-center justify-center p-6">
+        <div class="modal-content max-w-lg w-full {{ theme.modal }} rounded-2xl shadow-2xl border border-white/10">
+            <div class="px-6 py-4 border-b border-white/10">
+                <h2 class="text-lg font-semibold">Editar empresa</h2>
+            </div>
+            <div class="px-6 py-6 grid gap-4">
+                <input type="hidden" id="editEmpresaId" />
+                <label class="grid gap-2">
+                    <span class="text-sm font-medium opacity-80">Nome da empresa</span>
+                    <input type="text" id="editEmpresaNome" required maxlength="255" class="rounded-lg border border-white/20 bg-transparent px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/60" />
+                </label>
+                <label class="grid gap-2">
+                    <span class="text-sm font-medium opacity-80">Descrição</span>
+                    <textarea id="editEmpresaDescricao" rows="3" class="rounded-lg border border-white/20 bg-transparent px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/60"></textarea>
+                </label>
+                <p id="editEmpresaFeedback" class="text-sm hidden"></p>
+            </div>
+            <div class="px-6 py-4 border-t border-white/10 flex gap-3 justify-end">
+                <button id="cancelEditEmpresa" class="px-4 py-2 rounded-lg border border-white/20 hover:border-white/40 transition text-sm">
+                    Cancelar
+                </button>
+                <button id="confirmEditEmpresa" class="px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-medium transition text-sm">
+                    Salvar alterações
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal excluir empresa -->
+<div id="deleteEmpresaModal" class="modal-backdrop fixed inset-0 bg-black/60 hidden z-50">
+    <div class="w-full h-full flex items-center justify-center p-6">
+        <div class="modal-content max-w-md w-full {{ theme.modal }} rounded-2xl shadow-2xl border border-white/10">
+            <div class="px-6 py-4 border-b border-white/10">
+                <h2 class="text-lg font-semibold text-red-400">Confirmar exclusão</h2>
+            </div>
+            <div class="px-6 py-6">
+                <p class="text-sm opacity-90 mb-2">Deseja realmente excluir a empresa:</p>
+                <p id="deleteEmpresaName" class="font-semibold text-lg mb-4"></p>
+                <p class="text-sm opacity-70">Esta ação é permanente e não poderá ser desfeita.</p>
+            </div>
+            <div class="px-6 py-4 border-t border-white/10 flex gap-3 justify-end">
+                <button id="cancelDeleteEmpresa" class="px-4 py-2 rounded-lg border border-white/20 hover:border-white/40 transition text-sm">
+                    Cancelar
+                </button>
+                <button id="confirmDeleteEmpresa" class="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium transition text-sm">
+                    Excluir empresa
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    window.__EMPRESAS__ = {{ empresas|tojson }};
+    window.__THEME__ = {{ theme|tojson }};
+    window.__THEME_OPTIONS__ = {{ theme_options|tojson }};
+    window.dashboardUtils = window.dashboardUtils || {};
+</script>
+<script src="{{ url_for('static', filename='js/empresas.js') }}"></script>
+{% endblock %}
+

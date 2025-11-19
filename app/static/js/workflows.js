@@ -6,6 +6,7 @@
     const createWorkflowNome = document.getElementById('createWorkflowNome');
     const createWorkflowDescricao = document.getElementById('createWorkflowDescricao');
     const createWorkflowTipo = document.getElementById('createWorkflowTipo');
+    const createWorkflowEmpresa = document.getElementById('createWorkflowEmpresa');
     const createWorkflowFeedback = document.getElementById('createWorkflowFeedback');
     const confirmCreateBtn = document.getElementById('confirmCreate');
     const cancelCreateBtn = document.getElementById('cancelCreate');
@@ -18,6 +19,7 @@
     const editWorkflowNome = document.getElementById('editWorkflowNome');
     const editWorkflowDescricao = document.getElementById('editWorkflowDescricao');
     const editWorkflowTipo = document.getElementById('editWorkflowTipo');
+    const editWorkflowEmpresa = document.getElementById('editWorkflowEmpresa');
     const editWorkflowFeedback = document.getElementById('editWorkflowFeedback');
     const confirmEditBtn = document.getElementById('confirmEdit');
     const cancelEditBtn = document.getElementById('cancelEdit');
@@ -25,7 +27,28 @@
     const state = {
         workflows: Array.isArray(window.__WORKFLOWS__) ? [...window.__WORKFLOWS__] : [],
         pendingDeleteId: null,
+        empresaId: typeof window.__EMPRESA_ID__ === 'number' ? window.__EMPRESA_ID__ : null,
+        empresas: [],
     };
+
+    async function loadEmpresas() {
+        try {
+            const res = await apiRequest('/api/empresas', 'GET');
+            state.empresas = Array.isArray(res?.items) ? res.items : [];
+        } catch (e) {
+            state.empresas = [];
+        }
+    }
+
+    function populateEmpresaSelect(select, selectedId) {
+        if (!select) return;
+        const opts = ['<option value="">Sem empresa</option>'];
+        for (const e of state.empresas) {
+            const sel = selectedId && Number(selectedId) === Number(e.id) ? 'selected' : '';
+            opts.push(`<option value="${e.id}" ${sel}>${e.nome}</option>`);
+        }
+        select.innerHTML = opts.join('');
+    }
 
     function setCreateFeedback(message, success = true) {
         if (!createWorkflowFeedback) return;
@@ -72,6 +95,10 @@
         createWorkflowDescricao.value = '';
         createWorkflowTipo.value = '';
         setCreateFeedback('');
+        // garantir empresas no select
+        loadEmpresas().then(() => {
+            populateEmpresaSelect(createWorkflowEmpresa, state.empresaId);
+        });
         createModal.classList.remove('hidden');
         requestAnimationFrame(() => {
             createWorkflowNome.focus();
@@ -95,11 +122,18 @@
         }
 
         try {
-            const response = await apiRequest('/api/workflows', 'POST', {
+            const payload = {
                 nome,
                 descricao,
                 tipo,
-            });
+            };
+            const selectedEmpresa = createWorkflowEmpresa && createWorkflowEmpresa.value ? Number(createWorkflowEmpresa.value) : null;
+            if (selectedEmpresa != null) {
+                payload.empresa_id = selectedEmpresa;
+            } else if (state.empresaId != null) {
+                payload.empresa_id = state.empresaId;
+            }
+            const response = await apiRequest('/api/workflows', 'POST', payload);
             
             if (response?.workflow) {
                 state.workflows.unshift(response.workflow);
@@ -156,6 +190,10 @@
         editWorkflowNome.value = workflow.nome;
         editWorkflowDescricao.value = workflow.descricao || '';
         editWorkflowTipo.value = workflow.tipo;
+        // empresas
+        loadEmpresas().then(() => {
+            populateEmpresaSelect(editWorkflowEmpresa, workflow.empresa_id || state.empresaId);
+        });
         setEditFeedback('');
         editModal.classList.remove('hidden');
         requestAnimationFrame(() => {
@@ -183,11 +221,16 @@
         }
 
         try {
-            const response = await apiRequest(`/api/workflows/${workflowId}`, 'PUT', {
-                nome,
-                descricao,
-                tipo,
-            });
+            const payload = { nome, descricao, tipo };
+            const selectedEmpresa = editWorkflowEmpresa && editWorkflowEmpresa.value ? Number(editWorkflowEmpresa.value) : null;
+            if (selectedEmpresa != null) {
+                payload.empresa_id = selectedEmpresa;
+            } else if (state.empresaId != null) {
+                payload.empresa_id = state.empresaId;
+            } else {
+                payload.empresa_id = null; // permitir desvincular
+            }
+            const response = await apiRequest(`/api/workflows/${workflowId}`, 'PUT', payload);
             
             if (response?.workflow) {
                 const index = state.workflows.findIndex((item) => item.id === workflowId);
