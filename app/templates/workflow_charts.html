@@ -182,6 +182,23 @@
 {% block scripts %}
 <script>
     window.__WORKFLOW__ = {{ workflow|tojson }};
+    window.__EMPRESA__ = {{ (empresa or {})|tojson }};
+    (function(){
+        try{
+            var wf = window.__WORKFLOW__ || {};
+            var emp = window.__EMPRESA__ || {};
+            if(!wf || !wf.id || !emp || !emp.nome) return;
+            var slug = (emp.nome||'').toString()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+                .toLowerCase().replace(/[^a-z0-9]+/g,'-')
+                .replace(/(^-|-$)/g,'') || 'empresa';
+            var current = window.location.pathname;
+            var desired = '/empresas/' + slug + '/' + wf.id + '/dashboards';
+            if(/^\/workflows\/\d+\/dashboards\/?$/.test(current) && current !== desired){
+                window.history.replaceState({}, document.title, desired + window.location.search + window.location.hash);
+            }
+        }catch(e){ console.warn('Nao foi possivel ajustar URL amigavel dos dashboards:', e); }
+    })();
 </script>
 <script src="{{ url_for('static', filename='js/workflow_charts.js') }}"></script>
 {% endblock %}

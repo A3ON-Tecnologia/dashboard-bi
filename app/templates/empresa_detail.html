@@ -37,6 +37,8 @@
         </div>
         <div class="flex flex-wrap gap-3">
           <a href="{{ url_for('web.workflow_detail_view', workflow_id=item.id) }}" class="inline-flex items-center justify-center px-4 py-2 rounded-lg border !border-emerald-400/40 !text-emerald-200 hover:!border-emerald-400 hover:!text-emerald-100 transition text-sm">Abrir</a>
+          <button data-action="edit-workflow" data-workflow-id="{{ item.id }}" class="px-4 py-2 rounded-lg border border-blue-400/40 text-blue-200 hover:border-blue-400 hover:text-blue-100 transition text-sm">Editar</button>
+          <button data-action="delete-workflow" data-workflow-id="{{ item.id }}" class="px-4 py-2 rounded-lg border border-red-400/40 text-red-200 hover:border-red-400 hover:text-red-100 transition text-sm">Excluir</button>
         </div>
       </article>
       {% else %}
@@ -134,7 +136,28 @@
   window.__EMPRESA__ = {{ empresa|tojson }};
   window.__WORKFLOWS__ = {{ workflows|tojson }};
   window.__EMPRESA_ID__ = {{ empresa.id }};
+  // Substitui somente a visualização da URL por um slug legível
+  (function() {
+    try {
+      var empresa = window.__EMPRESA__ || {};
+      var name = (empresa.nome || '').toString();
+      if (!name) return;
+      var slug = name
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase().replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '') || 'empresa';
+      var current = window.location.pathname;
+      // Se estamos em /empresas/<id>, substitui por /empresas/<slug>
+      if (/^\/empresas\/(\d+)(\/)?$/.test(current)) {
+        var newPath = '/empresas/' + slug;
+        if (current !== newPath) {
+          window.history.replaceState({}, document.title, newPath + window.location.search + window.location.hash);
+        }
+      }
+    } catch (e) {
+      console.warn('Não foi possível ajustar a URL amigável da empresa:', e);
+    }
+  })();
 </script>
 <script src="{{ url_for('static', filename='js/empresa_detail.js') }}"></script>
 {% endblock %}
-

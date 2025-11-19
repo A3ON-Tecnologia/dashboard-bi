@@ -45,8 +45,7 @@
           <p class=\"text-sm opacity-70\">${wf.descricao || 'Sem descri√ß√£o informada.'}</p>
         </div>
         <div class=\"flex flex-wrap gap-3\">
-          <a href=\"/workflows/${wf.id}\" class=\"inline-flex items-center justify-center px-4 py-2 rounded-lg border border-emerald-400/40 text-emerald-200 hover:border-emerald-400 hover:text-emerald-100 transition text-sm\">Abrir</a>
-        </div>
+          <a href=\"/workflows/${wf.id}\" class=\"inline-flex items-center justify-center px-4 py-2 rounded-lg border border-emerald-400/40 text-emerald-200 hover:border-emerald-400 hover:text-emerald-100 transition text-sm\">Abrir</a>`r`n          <button class=\"px-4 py-2 rounded-lg border border-blue-400/40 text-blue-200 hover:border-blue-400 hover:text-blue-100 transition text-sm\" data-action=\"edit-workflow\" data-workflow-id=\"${wf.id}\">Editar</button>`r`n          <button class=\"px-4 py-2 rounded-lg border border-red-400/40 text-red-200 hover:border-red-400 hover:text-red-100 transition text-sm\" data-action=\"delete-workflow\" data-workflow-id=\"${wf.id}\">Excluir</button>`r`n        </div>
       </article>
     `).join('');
   }
@@ -125,3 +124,51 @@
   renderList();
 })();
 
+
+
+
+
+
+  // Editar/Excluir workflows na lista da empresa
+  if (listContainer) {
+    listContainer.addEventListener("click", async (e) => {
+      const el = e.target;
+      if (!(el instanceof HTMLElement)) return;
+      const action = el.getAttribute("data-action");
+      const idAttr = el.getAttribute("data-workflow-id");
+      const id = idAttr ? Number(idAttr) : 0;
+      if (!action || !id) return;
+
+      const idx = state.workflows.findIndex((w) => Number(w.id) === id);
+      if (idx < 0) return;
+      const wf = state.workflows[idx];
+
+      if (action === "delete-workflow") {
+        if (!confirm(`Excluir o workflow "${wf.nome}"?`)) return;
+        try {
+          await apiRequest(`/api/workflows/${id}`, 'DELETE');
+          state.workflows.splice(idx, 1);
+          renderList();
+        } catch (err) {
+          alert(err.message || 'Falha ao excluir workflow');
+        }
+        return;
+      }
+
+      if (action === "edit-workflow") {
+        const novoNome = prompt('Nome do workflow:', wf.nome);
+        if (novoNome === null) return;
+        const novaDesc = prompt('DescriÁ„o (opcional):', wf.descricao || '');
+        try {
+          const payload = { nome: (novoNome || '').trim(), descricao: (novaDesc || '').trim(), tipo: wf.tipo, empresa_id: empresaId };
+          const res = await apiRequest(`/api/workflows/${id}`, 'PUT', payload);
+          if (res?.workflow) {
+            state.workflows[idx] = res.workflow;
+            renderList();
+          }
+        } catch (err) {
+          alert(err.message || 'Falha ao editar workflow');
+        }
+      }
+    });
+  }

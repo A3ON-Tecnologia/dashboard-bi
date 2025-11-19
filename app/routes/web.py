@@ -28,19 +28,13 @@ def _theme_options() -> list[dict]:
 
 @web_bp.route("/")
 def index():
-    return redirect(url_for("web.list_workflows_view"))
+    return redirect(url_for("web.list_empresas_view"))
 
 
 @web_bp.route("/workflows")
 def list_workflows_view():
-    theme = get_theme_context()
-    workflows = Workflow.query.order_by(Workflow.data_criacao.desc()).all()
-    return render_template(
-        "workflows.html",
-        theme=theme,
-        workflows=[workflow.to_dict() for workflow in workflows],
-        theme_options=_theme_options(),
-    )
+    # Rota descontinuada: manter compatibilidade redirecionando para empresas
+    return redirect(url_for("web.list_empresas_view"), code=302)
 
 
 @web_bp.route("/workflows/<int:workflow_id>")

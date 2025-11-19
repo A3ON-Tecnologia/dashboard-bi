@@ -16,8 +16,13 @@
             <a href="{{ url_for('web.workflow_charts_view', workflow_id=workflow.id) }}"
                 class="px-4 py-2 rounded-lg border border-white/15 hover:border-white/40 transition text-sm">Ir para
                 dashboards</a>
+            {% if empresa and empresa.id %}
+            <a href="{{ url_for('web.empresa_detail_view', empresa_id=empresa.id) }}"
+                class="px-4 py-2 rounded-lg border border-white/15 hover:border-white/40 transition text-sm">Voltar</a>
+            {% else %}
             <a href="{{ url_for('web.list_workflows_view') }}"
                 class="px-4 py-2 rounded-lg border border-white/15 hover:border-white/40 transition text-sm">Voltar</a>
+            {% endif %}
         </div>
     </div>
 
@@ -140,6 +145,25 @@
 {% block scripts %}
 <script>
     window.__WORKFLOW__ = {{ workflow | tojson }};
+    window.__EMPRESA__ = {{ (empresa or {}) | tojson }};
+    // Ajusta apenas a visualização da URL para incluir empresa/nome-slug/id
+    (function() {
+        try {
+            var wf = window.__WORKFLOW__ || {};
+            var emp = window.__EMPRESA__ || {};
+            if (!wf || !wf.id || !emp || !emp.nome) return;
+            var slug = (emp.nome || '').toString()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase().replace(/[^a-z0-9]+/g, '-')
+                .replace(/(^-|-$)/g, '') || 'empresa';
+            var current = window.location.pathname;
+            var desired = '/empresas/' + slug + '/' + wf.id;
+            // Apenas altera quando estiver na rota real /workflows/<id>
+            if (/^\/workflows\/\d+(\/)??$/.test(current) && current !== desired) {
+                window.history.replaceState({}, document.title, desired + window.location.search + window.location.hash);
+            }
+        } catch (e) { console.warn('Não foi possível ajustar URL amigável do workflow:', e); }
+    })();
 </script>
 <script src="{{ url_for('static', filename='js/workflow_detail.js') }}"></script>
 {% endblock %}
