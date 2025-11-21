@@ -14,14 +14,29 @@
         </div>
         <div class="flex flex-wrap gap-3">
             <a href="{{ url_for('web.workflow_charts_view', workflow_id=workflow.id) }}"
-                class="inline-flex items-center justify-center gap-2 rounded-lg px-5 py-2.5 font-medium {{ theme.buttons.primary }} transition text-sm">Ir para
-                dashboards</a>
+               class="inline-flex items-center justify-center gap-2 rounded-lg px-5 py-2.5 font-medium {{ theme.buttons.primary }} transition text-sm">
+                Ir para dashboards
+            </a>
             {% if empresa and empresa.id %}
             <a href="{{ url_for('web.empresa_detail_view', empresa_id=empresa.id) }}"
-                class="px-4 py-2 rounded-lg border border-white/15 hover:border-white/40 transition text-sm">Voltar</a>
+               class="inline-flex items-center gap-2 px-3 py-2 rounded-lg {{ theme.buttons.primary }} text-sm font-medium border border-white/20 hover:border-white/40 hover:brightness-110 transition"
+               title="Voltar" aria-label="Voltar">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6" />
+                    <line x1="9" y1="12" x2="21" y2="12" />
+                </svg>
+                <span>Voltar</span>
+            </a>
             {% else %}
             <a href="{{ url_for('web.list_workflows_view') }}"
-                class="px-4 py-2 rounded-lg border border-white/15 hover:border-white/40 transition text-sm">Voltar</a>
+               class="inline-flex items-center gap-2 px-3 py-2 rounded-lg {{ theme.buttons.primary }} text-sm font-medium border border-white/20 hover:border-white/40 hover:brightness-110 transition"
+               title="Voltar" aria-label="Voltar">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6" />
+                    <line x1="9" y1="12" x2="21" y2="12" />
+                </svg>
+                <span>Voltar</span>
+            </a>
             {% endif %}
         </div>
     </div>
@@ -167,3 +182,4 @@
 </script>
 <script src="{{ url_for('static', filename='js/workflow_detail.js') }}"></script>
 {% endblock %}
+

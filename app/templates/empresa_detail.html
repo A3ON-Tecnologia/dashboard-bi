@@ -13,7 +13,7 @@
     <div class="flex gap-2">
       <button type="button" id="openEditEmpresa" class="px-4 py-2 rounded-lg border border-blue-400/40 text-blue-200 hover:border-blue-400 hover:text-blue-100 transition text-sm">Editar empresa</button>
       <button type="button" id="openDeleteEmpresa" class="px-4 py-2 rounded-lg border border-red-400/40 text-red-200 hover:border-red-400 hover:text-red-100 transition text-sm">Excluir empresa</button>
-      <a href="{{ url_for('web.index') }}" class="inline-flex items-center justify-center gap-2 rounded-lg px-5 py-2.5 font-medium {{ theme.buttons.primary }} transition text-sm">Voltar ao início</a>
+<a href="{{ url_for('web.list_empresas_view') }}" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg {{ theme.buttons.primary }} text-sm font-medium border border-white/20 hover:border-white/40 hover:brightness-110 transition" title="Voltar" aria-label="Voltar"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6" /><line x1="9" y1="12" x2="21" y2="12" /></svg><span>Voltar</span></a>
     </div>
   </div>
 
@@ -162,4 +162,5 @@
 </script>
 <script src="{{ url_for('static', filename='js/empresa_detail.js') }}"></script>
 {% endblock %}
+
 

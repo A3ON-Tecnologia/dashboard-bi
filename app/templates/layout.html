@@ -91,6 +91,18 @@
             background: linear-gradient(to right, rgb(59, 130, 246), rgb(139, 92, 246));
             color: white;
         }
+        /* Efeito neon na logo */
+        .logo-neon {
+            transition: transform .2s ease, filter .25s ease, box-shadow .25s ease;
+        }
+        .logo-neon:hover {
+            filter: drop-shadow(0 0 6px rgba(96,165,250,0.7)) /* blue-400 */
+                    drop-shadow(0 0 12px rgba(167,139,250,0.6)) /* purple-400 */
+                    drop-shadow(0 0 18px rgba(244,114,182,0.45)); /* pink-400 */
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .logo-neon { transition: none; }
+        }
     </style>
 </head>
 <body class="{{ theme.bg }} {{ theme.text }} min-h-screen">
@@ -98,7 +110,9 @@
         <aside class="fixed inset-y-0 left-0 w-64 {{ theme.navbar }} flex flex-col justify-between">
             <div>
                 <div class="px-6 py-6 flex flex-col items-center justify-center gap-3">
-                    <img src="{{ url_for('static', filename='images/chart-logo.png') }}" alt="Logo" class="h-28 w-auto cursor-pointer hover:scale-110 transition-all duration-200" />
+                    <a href="{{ url_for('web.index') }}" title="Ir para a página inicial" aria-label="Ir para a página inicial">
+                        <img src="{{ url_for('static', filename='images/chart-logo-2.png') }}" alt="Logo" class="logo-neon h-52 w-auto cursor-pointer hover:scale-110 transition-all duration-200" />
+                    </a>
                 </div>
                 <nav class="px-4 space-y-1 mt-4">
                     <a href="{{ url_for('web.list_empresas_view') }}" class="group flex items-center gap-3 px-3 py-2 rounded-lg transition {{ theme.buttons.primary if request.endpoint == 'web.list_empresas_view' or request.endpoint == 'web.empresa_detail_view' else 'hover:bg-white/10' }}">
