@@ -39,7 +39,7 @@
         <div class="flex flex-wrap gap-3">
           <a href="{{ url_for('web.workflow_detail_view', workflow_id=item.id) }}" class="inline-flex items-center justify-center px-4 py-2 rounded-lg border !border-emerald-400/40 !text-emerald-200 hover:!border-emerald-400 hover:!text-emerald-100 transition text-sm">Abrir</a>
           <button data-action="edit-workflow" data-workflow-id="{{ item.id }}" class="px-4 py-2 rounded-lg border border-blue-400/40 text-blue-200 hover:border-blue-400 hover:text-blue-100 transition text-sm">Editar</button>
-          <button data-action="delete-workflow" data-workflow-id="{{ item.id }}" class="px-4 py-2 rounded-lg border border-red-400/40 text-red-200 hover:border-red-400 hover:text-red-100 transition text-sm">Excluir</button>
+          <button data-action="delete-workflow-modal" data-workflow-id="{{ item.id }}" class="px-4 py-2 rounded-lg border border-red-400/40 text-red-200 hover:border-red-400 hover:text-red-100 transition text-sm">Excluir</button>
         </div>
       </article>
       {% else %}
@@ -129,6 +129,27 @@
       </div>
     </div>
   </div>
+</div>
+
+<!-- Modal excluir workflow -->
+<div id="deleteWorkflowModal" class="modal-backdrop fixed inset-0 bg-black/60 hidden z-50">
+  <div class="w-full h-full flex items-center justify-center p-6">
+    <div class="modal-content max-w-md w-full {{ theme.modal }} rounded-2xl shadow-2xl border border-white/10">
+      <div class="px-6 py-4 border-b border-white/10">
+        <h2 class="text-lg font-semibold text-red-400">Confirmar exclusão</h2>
+      </div>
+      <div class="px-6 py-6">
+        <p class="text-sm opacity-90 mb-2">Deseja realmente excluir o workflow:</p>
+        <p id="deleteWorkflowName" class="font-semibold text-lg mb-4"></p>
+        <p class="text-sm opacity-70">Esta ação é permanente e não poderá ser desfeita.</p>
+      </div>
+      <div class="px-6 py-4 border-t border-white/10 flex gap-3 justify-end">
+        <button class="px-4 py-2 rounded-lg border border-white/20 hover:border-white/40 transition text-sm" onclick="window.hideDeleteWorkflowModal && window.hideDeleteWorkflowModal()">Cancelar</button>
+        <button class="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium transition text-sm" onclick="window.confirmDeleteWorkflowModal && window.confirmDeleteWorkflowModal()">Excluir workflow</button>
+      </div>
+    </div>
+  </div>
+  
 </div>
 {% endblock %}
 
