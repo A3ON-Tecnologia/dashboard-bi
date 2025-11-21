@@ -1,71 +1,3 @@
-{% extends "layout.html" %}
-
-{% block title %}{{ workflow.nome }} – Dashboards{% endblock %}
-
-{% block content %}
-<section class="space-y-8">
-    <header class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-            <p class="text-sm uppercase tracking-wide opacity-60">{{ workflow.tipo.replace('_', ' ') }}</p>
-            <h1 class="text-3xl font-semibold">{{ workflow.nome }}</h1>
-            <p class="text-sm opacity-70">Construa visualizações sobre os dados importados.</p>
-        </div>
-        <div class="flex flex-col items-end gap-3">
-            <div class="flex flex-wrap gap-3">
-                <button id="openChartModal"
-                        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg {{ theme.buttons.primary }} text-sm font-medium shadow-lg shadow-purple-500/40 hover:shadow-purple-400/60 transition">
-                    <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-black/20 text-base font-semibold">
-                        +
-                    </span>
-                    <span>Novo gráfico</span>
-                </button>
-                <a href="{{ url_for('web.workflow_detail_view', workflow_id=workflow.id) }}"
-                   class="inline-flex items-center gap-2 px-3 py-2 rounded-lg {{ theme.buttons.primary }} text-sm font-medium border border-white/20 hover:border-white/40 hover:brightness-110 transition"
-                   title="Voltar para dados"
-                   aria-label="Voltar para dados">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
-                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                         stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="15 18 9 12 15 6" />
-                        <line x1="9" y1="12" x2="21" y2="12" />
-                    </svg>
-                    <span class="hidden sm:inline">Voltar</span>
-                </a>
-            </div>
-            <a href="{{ url_for('web.workflow_charts_view_readonly', workflow_id=workflow.id) }}"
-               target="_blank"
-               rel="noopener noreferrer"
-               class="inline-flex items-center gap-2 px-4 py-2 rounded-lg {{ theme.buttons.secondary }} text-xs sm:text-sm border border-white/10 hover:border-white/30 transition">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
-                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                     stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" />
-                    <circle cx="12" cy="12" r="3" />
-                </svg>
-                <span>Visualizar gráficos</span>
-            </a>
-        </div>
-    </header>
-
-    <section class="rounded-2xl border border-white/10 bg-white/5 backdrop-blur px-6 py-6 space-y-4">
-        <div class="flex items-center justify-between gap-3">
-            <h2 class="text-xl font-semibold">Dados disponíveis</h2>
-            <button id="refreshCharts" class="px-3 py-2 rounded-lg border border-white/15 hover:border-white/40 transition text-xs">
-                Atualizar
-            </button>
-        </div>
-        <div id="datasetSummary" class="grid gap-2 text-sm opacity-80">
-            <p>Carregando informações...</p>
-        </div>
-    </section>
-
-    <section id="chartGrid" class="space-y-6">
-        <div class="text-sm opacity-70">
-            Nenhum gráfico cadastrado até o momento. Clique em "Novo gráfico" para começar.
-        </div>
-    </section>
-</section>
-
 <div id="chartModal" class="fixed inset-0 bg-black/60 backdrop-blur hidden z-50">
     <div class="w-full h-full flex items-center justify-center p-6">
         <div class="max-w-3xl w-full {{ theme.modal }} rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
@@ -235,6 +167,5 @@
 </script>
 <script src="{{ url_for('static', filename='js/workflow_charts.js') }}"></script>
 {% endblock %}
-
 
 

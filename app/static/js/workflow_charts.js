@@ -169,13 +169,13 @@
     }
 
     const CHART_TYPES = [
-        { type: 'bar', label: 'Barras verticais', description: 'Comparacao entre categorias com colunas.' },
-        { type: 'bar-horizontal', label: 'Barras horizontais', description: 'Comparacao usando barras na horizontal.' },
-        { type: 'line', label: 'Linha', description: 'Tendencias ou evolucao ao longo do tempo.' },
-        { type: 'area', label: 'Area', description: 'Linha com preenchimento para destacar volume.' },
-        { type: 'pie', label: 'Pizza', description: 'Distribuicao percentual por categoria.' },
-        { type: 'donut', label: 'Donut', description: 'Variacao do grafico de pizza com centro oco.' },
-        { type: 'table', label: 'Tabela', description: 'Exibicao tabular dos dados selecionados.' },
+        { type: 'bar', label: 'Barras verticais', description: 'Comparação entre categorias com colunas.' },
+        { type: 'bar-horizontal', label: 'Barras horizontais', description: 'Comparação usando barras na horizontal.' },
+        { type: 'line', label: 'Linha', description: 'Tendências ou evolução ao longo do tempo.' },
+        { type: 'area', label: 'Área', description: 'Linha com preenchimento para destacar volume.' },
+        { type: 'pie', label: 'Pizza', description: 'Distribuição percentual por categoria.' },
+        { type: 'donut', label: 'Donut', description: 'Variação do gráfico de pizza com centro oco.' },
+        { type: 'table', label: 'Tabela', description: 'Exibição tabular dos dados selecionados.' },
     ];
 
     const STACKABLE_TYPES = new Set(['bar', 'bar-horizontal', 'area']);
