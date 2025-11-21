@@ -67,6 +67,21 @@ def workflow_charts_view(workflow_id: int):
     )
 
 
+@web_bp.route("/workflows/<int:workflow_id>/dashboards/visualizar")
+def workflow_charts_view_readonly(workflow_id: int):
+    theme = get_theme_context()
+    workflow = Workflow.query.get_or_404(workflow_id)
+    workflow_payload = serialize_workflow(workflow)
+    empresa_payload = workflow.empresa.to_dict() if workflow.empresa else None
+    return render_template(
+        "workflow_charts_view.html",
+        theme=theme,
+        workflow=workflow_payload,
+        empresa=empresa_payload,
+        theme_options=_theme_options(),
+    )
+
+
 @web_bp.route("/empresas")
 def list_empresas_view():
     theme = get_theme_context()
@@ -123,6 +138,11 @@ def workflow_slug_redirect(empresa_slug: str, workflow_id: int):
 @web_bp.route("/empresas/<empresa_slug>/<int:workflow_id>/dashboards")
 def workflow_dashboards_slug_redirect(empresa_slug: str, workflow_id: int):
     return redirect(url_for("web.workflow_charts_view", workflow_id=workflow_id), code=301)
+
+
+@web_bp.route("/empresas/<empresa_slug>/<int:workflow_id>/dashboards/visualizar")
+def workflow_dashboards_viewonly_slug_redirect(empresa_slug: str, workflow_id: int):
+    return redirect(url_for("web.workflow_charts_view_readonly", workflow_id=workflow_id), code=301)
 
 
 # -----------------------------------------------------------------------------

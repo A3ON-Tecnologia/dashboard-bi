@@ -1,5 +1,5 @@
 (() => {
-    const { apiRequest } = window.dashboardUtils;
+    const { apiRequest, showToast, navigateWithToast } = window.dashboardUtils;
     const listContainer = document.getElementById('workflowList');
     const openCreateModalBtn = document.getElementById('openCreateModal');
     const createModal = document.getElementById('createModal');
@@ -136,12 +136,13 @@
             const response = await apiRequest('/api/workflows', 'POST', payload);
             
             if (response?.workflow) {
-                state.workflows.unshift(response.workflow);
-                renderList();
+                const wfId = response.workflow.id;
                 hideCreateModal();
+                navigateWithToast(`/workflows/${wfId}`, { message: 'Workflow criado com sucesso.', type: 'success', duration: 3000 });
             }
         } catch (error) {
             setCreateFeedback(error.message, false);
+            showToast({ message: error.message || 'Falha ao criar workflow.', type: 'error', duration: 3000 });
         }
     }
 
@@ -168,8 +169,9 @@
             state.workflows = state.workflows.filter((item) => item.id !== state.pendingDeleteId);
             renderList();
             hideDeleteModal();
+            showToast({ message: 'Workflow excluído com sucesso.', type: 'error', duration: 3000 });
         } catch (error) {
-            alert(error.message);
+            showToast({ message: error.message || 'Falha ao excluir workflow.', type: 'error', duration: 3000 });
             hideDeleteModal();
         }
     }
@@ -233,15 +235,12 @@
             const response = await apiRequest(`/api/workflows/${workflowId}`, 'PUT', payload);
             
             if (response?.workflow) {
-                const index = state.workflows.findIndex((item) => item.id === workflowId);
-                if (index !== -1) {
-                    state.workflows[index] = response.workflow;
-                }
-                renderList();
                 hideEditModal();
+                navigateWithToast(`/workflows/${workflowId}`, { message: 'Workflow atualizado com sucesso.', type: 'info', duration: 3000 });
             }
         } catch (error) {
             setEditFeedback(error.message, false);
+            showToast({ message: error.message || 'Falha ao atualizar workflow.', type: 'error', duration: 3000 });
         }
     }
 

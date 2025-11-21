@@ -1,5 +1,5 @@
 (() => {
-  const { apiRequest } = window.dashboardUtils;
+  const { apiRequest, showToast, navigateWithToast } = window.dashboardUtils;
 
   const listContainer = document.getElementById('empresaList');
   const openCreateBtn = document.getElementById('openCreateEmpresaModal');
@@ -73,11 +73,13 @@
     try {
       const res = await apiRequest('/api/empresas', 'POST', { nome, descricao });
       if (res?.empresa) {
-        state.empresas.unshift(res.empresa);
-        renderList();
         hideCreate();
+        navigateWithToast(`/empresas/${res.empresa.id}`, { message: 'Empresa criada com sucesso.', type: 'success', duration: 3000 });
       }
-    } catch (e) { setFeedback(createFeedback, e.message || 'Erro', false); }
+    } catch (e) {
+      setFeedback(createFeedback, e.message || 'Erro', false);
+      showToast({ message: e.message || 'Falha ao criar empresa.', type: 'error', duration: 3000 });
+    }
   }
 
   function showEdit(id) {
@@ -100,12 +102,13 @@
     try {
       const res = await apiRequest(`/api/empresas/${id}`, 'PUT', { nome, descricao });
       if (res?.empresa) {
-        const i = state.empresas.findIndex(e => e.id === id);
-        if (i !== -1) state.empresas[i] = res.empresa;
-        renderList();
         hideEdit();
+        navigateWithToast(`/empresas/${id}`, { message: 'Empresa atualizada com sucesso.', type: 'info', duration: 3000 });
       }
-    } catch (e) { setFeedback(editFeedback, e.message || 'Erro', false); }
+    } catch (e) {
+      setFeedback(editFeedback, e.message || 'Erro', false);
+      showToast({ message: e.message || 'Falha ao atualizar empresa.', type: 'error', duration: 3000 });
+    }
   }
 
   function showDelete(id) {
@@ -122,9 +125,12 @@
     try {
       await apiRequest(`/api/empresas/${state.pendingDeleteId}`, 'DELETE');
       state.empresas = state.empresas.filter(e => e.id !== state.pendingDeleteId);
-      renderList();
       hideDelete();
-    } catch (e) { alert(e.message || 'Erro'); hideDelete(); }
+      navigateWithToast('/empresas', { message: 'Empresa excluída com sucesso.', type: 'error', duration: 3000 });
+    } catch (e) {
+      showToast({ message: e.message || 'Falha ao excluir empresa.', type: 'error', duration: 3000 });
+      hideDelete();
+    }
   }
 
   function handleListClick(ev) {
@@ -152,4 +158,3 @@
 
   renderList();
 })();
-

@@ -1,5 +1,5 @@
 (() => {
-  const { apiRequest } = window.dashboardUtils;
+  const { apiRequest, showToast, navigateWithToast, reloadWithToast } = window.dashboardUtils;
   const empresaId = Number(window.__EMPRESA_ID__);
 
   const listContainer = document.getElementById('empresaWorkflowList');
@@ -71,9 +71,9 @@
     try {
       const res = await apiRequest('/api/workflows', 'POST', { nome, descricao, tipo, empresa_id: empresaId });
       if (res?.workflow) {
-        state.workflows.unshift(res.workflow);
-        renderList();
+        const wfId = res.workflow.id;
         hideCreate();
+        navigateWithToast(`/workflows/${wfId}`, { message: 'Workflow criado com sucesso.', type: 'success', duration: 3000 });
       }
     } catch (e) { setFeedback(createFeedback, e.message || 'Erro', false); }
   }
@@ -87,8 +87,11 @@
     try {
       await apiRequest(`/api/empresas/${empresaId}`, 'PUT', { nome, descricao });
       hideEditEmpresa();
-      location.reload();
-    } catch (e) { setFeedback(editFeedback, e.message || 'Erro', false); }
+      reloadWithToast({ message: 'Empresa atualizada com sucesso.', type: 'info', duration: 3000 });
+    } catch (e) {
+      setFeedback(editFeedback, e.message || 'Erro', false);
+      showToast({ message: e.message || 'Falha ao atualizar empresa.', type: 'error', duration: 3000 });
+    }
   }
 
   function showDeleteEmpresa() { if (deleteModal) deleteModal.classList.remove('hidden'); }
@@ -96,8 +99,11 @@
   async function confirmDeleteEmpresa() {
     try {
       await apiRequest(`/api/empresas/${empresaId}`, 'DELETE');
-      window.location.href = '/empresas';
-    } catch (e) { alert(e.message || 'Erro'); hideDeleteEmpresa(); }
+      navigateWithToast('/empresas', { message: 'Empresa exclu�da com sucesso.', type: 'error', duration: 3000 });
+    } catch (e) {
+      showToast({ message: e.message || 'Falha ao excluir empresa.', type: 'error', duration: 3000 });
+      hideDeleteEmpresa();
+    }
   }
 
   // Backdrop close
@@ -144,8 +150,9 @@
           await apiRequest(`/api/workflows/${id}`, 'DELETE');
           state.workflows.splice(idx, 1);
           renderList();
+          showToast({ message: 'Workflow excluído com sucesso.', type: 'error', duration: 3000 });
         } catch (err) {
-          alert(err.message || 'Falha ao excluir workflow');
+          showToast({ message: err.message || 'Falha ao excluir workflow.', type: 'error', duration: 3000 });
         }
         return;
       }
@@ -160,9 +167,10 @@
           if (res?.workflow) {
             state.workflows[idx] = res.workflow;
             renderList();
+            navigateWithToast(`/workflows/${id}`, { message: 'Workflow atualizado com sucesso.', type: 'info', duration: 3000 });
           }
         } catch (err) {
-          alert(err.message || 'Falha ao editar workflow');
+          showToast({ message: err.message || 'Falha ao editar workflow.', type: 'error', duration: 3000 });
         }
       }
     });
@@ -170,4 +178,5 @@
 
   renderList();
 })();
+
 

@@ -1,0 +1,84 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ workflow.nome }} Â· VisualizaÃ§Ã£o</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    <style>
+        body { font-family: 'Space Mono', monospace; }
+        .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+        .scrollbar-thin::-webkit-scrollbar-thumb { border-radius: 9999px; }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body class="{{ theme.bg }} {{ theme.text }} min-h-screen">
+    <main class="min-h-screen overflow-y-auto scrollbar-thin">
+        <div class="max-w-7xl mx-auto px-6 py-8 space-y-8">
+            <header class="flex flex-col gap-2">
+                <p class="text-sm uppercase tracking-wide opacity-60">{{ workflow.tipo.replace('_', ' ') }}</p>
+                <h1 class="text-3xl font-semibold">{{ workflow.nome }}</h1>
+                {% if empresa %}
+                <p class="text-sm opacity-70">Empresa: <span class="font-semibold">{{ empresa.nome }}</span></p>
+                {% endif %}
+            </header>
+
+            <section class="rounded-2xl border border-white/10 bg-white/5 backdrop-blur px-6 py-6 space-y-4">
+                <div class="flex items-center justify-between gap-3">
+                    <h2 class="text-xl font-semibold">Dados disponÃ­veis</h2>
+                    <button id="refreshCharts" class="px-3 py-2 rounded-lg border border-white/15 hover:border-white/40 transition text-xs">Atualizar</button>
+                </div>
+                <div id="datasetSummary" class="grid gap-2 text-sm opacity-80">
+                    <p>Carregando informaÃ§Ãµes...</p>
+                </div>
+            </section>
+
+            <section id="chartGrid" class="space-y-6">
+                <div class="text-sm opacity-70">Carregando grÃ¡ficos cadastrados...</div>
+            </section>
+        </div>
+    </main>
+
+    <div id="toastContainer" class="fixed top-4 right-4 z-50 flex flex-col gap-3 pointer-events-none"></div>
+
+    <script>
+        window.__WORKFLOW__ = {{ workflow|tojson }};
+        window.__EMPRESA__ = {{ (empresa or {})|tojson }};
+        window.__READ_ONLY__ = true;
+        window.__THEME__ = {{ theme|tojson }};
+        window.__THEME_OPTIONS__ = {{ theme_options|tojson }};
+        (function(){
+            try{
+                var wf = window.__WORKFLOW__ || {};
+                var emp = window.__EMPRESA__ || {};
+                if(!wf || !wf.id || !emp || !emp.nome) return;
+                var slug = (emp.nome||'').toString()
+                    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+                    .toLowerCase().replace(/[^a-z0-9]+/g,'-')
+                    .replace(/(^-|-$)/g,'') || 'empresa';
+                var current = window.location.pathname;
+                var desired = '/empresas/' + slug + '/' + wf.id + '/dashboards/visualizar';
+                if(/^\/workflows\/\d+\/dashboards\/visualizar\/?$/.test(current) && current !== desired){
+                    window.history.replaceState({}, document.title, desired + window.location.search + window.location.hash);
+                }
+            }catch(e){ console.warn('Nao foi possivel ajustar URL amigavel dos dashboards visualizar:', e); }
+        })();
+    </script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/workflow_charts.js') }}"></script>
+    <script>
+        // Ocultar/neutralizar aÃ§Ãµes de ediÃ§Ã£o/exclusÃ£o caso renderizadas pelo JS de grÃ¡ficos
+        document.addEventListener('DOMContentLoaded', function(){
+            var btn = document.getElementById('openChartModal');
+            if (btn) btn.remove();
+        });
+        window.editChart = function(){ return false; };
+        window.deleteChart = function(){ return false; };
+    </script>
+</body>
+</html>
+

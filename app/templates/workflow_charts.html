@@ -1,6 +1,6 @@
-{% extends "layout.html" %}
+﻿{% extends "layout.html" %}
 
-{% block title %}{{ workflow.nome }} · Dashboards{% endblock %}
+{% block title %}{{ workflow.nome }} Â· Dashboards{% endblock %}
 
 {% block content %}
 <section class="space-y-8">
@@ -8,12 +8,11 @@
         <div>
             <p class="text-sm uppercase tracking-wide opacity-60">{{ workflow.tipo.replace('_', ' ') }}</p>
             <h1 class="text-3xl font-semibold">{{ workflow.nome }}</h1>
-            <p class="text-sm opacity-70">Construa visualizações sobre os dados importados.</p>
+            <p class="text-sm opacity-70">Construa visualizaÃ§Ãµes sobre os dados importados.</p>
         </div>
         <div class="flex flex-wrap gap-3">
-            <button id="openChartModal" class="px-4 py-2 rounded-lg {{ theme.buttons.primary }} text-sm font-medium">
-                Novo gráfico
-            </button>
+            <button id="openChartModal" class="px-4 py-2 rounded-lg {{ theme.buttons.primary }} text-sm font-medium">Novo grÃ¡fico</button>
+            <a href="{{ url_for('web.workflow_charts_view_readonly', workflow_id=workflow.id) }}" target="_blank" rel="noopener noreferrer" class="px-4 py-2 rounded-lg border border-white/15 hover:border-white/40 transition text-sm">Visualizar grÃ¡ficos</a>
             <a href="{{ url_for('web.workflow_detail_view', workflow_id=workflow.id) }}" class="px-4 py-2 rounded-lg border border-white/15 hover:border-white/40 transition text-sm">Voltar para dados</a>
         </div>
     </header>
@@ -24,12 +23,12 @@
             <button id="refreshCharts" class="px-3 py-2 rounded-lg border border-white/15 hover:border-white/40 transition text-xs">Atualizar</button>
         </div>
         <div id="datasetSummary" class="grid gap-2 text-sm opacity-80">
-            <p>Carregando informações...</p>
+            <p>Carregando informaÃ§Ãµes...</p>
         </div>
     </section>
 
     <section id="chartGrid" class="space-y-6">
-        <div class="text-sm opacity-70">Nenhum gráfico cadastrado até o momento. Clique em “Novo gráfico” para começar.</div>
+        <div class="text-sm opacity-70">Nenhum grÃ¡fico cadastrado atÃ© o momento. Clique em â€œNovo grÃ¡ficoâ€ para comeÃ§ar.</div>
     </section>
 </section>
 
@@ -38,21 +37,21 @@
         <div class="max-w-3xl w-full {{ theme.modal }} rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
             <header class="px-6 py-4 border-b border-white/10 flex items-center justify-between">
                 <div>
-                    <p class="text-xs uppercase tracking-widest opacity-60">Configuração de gráfico</p>
+                    <p class="text-xs uppercase tracking-widest opacity-60">ConfiguraÃ§Ã£o de grÃ¡fico</p>
                     <h2 class="text-lg font-semibold" id="chartModalTitle">Selecionar tipo</h2>
                 </div>
-                <button class="p-2 rounded-lg hover:bg-white/10" data-chart-close>✕</button>
+                <button class="p-2 rounded-lg hover:bg-white/10" data-chart-close>âœ•</button>
             </header>
 
             <div class="px-6 py-6 space-y-6 max-h-[70vh] overflow-y-auto scrollbar-thin">
                 <div class="flex items-center gap-3 text-sm">
                     <span class="px-3 py-1 rounded-full border border-white/10" data-step-indicator="1">1. Tipo</span>
                     <span class="px-3 py-1 rounded-full border border-white/10 opacity-60" data-step-indicator="2">2. Dados</span>
-                    <span class="px-3 py-1 rounded-full border border-white/10 opacity-60" data-step-indicator="3">3. Aparência</span>
+                    <span class="px-3 py-1 rounded-full border border-white/10 opacity-60" data-step-indicator="3">3. AparÃªncia</span>
                 </div>
 
                 <div data-chart-step="1" class="space-y-4">
-                    <p class="text-sm opacity-70">Escolha o tipo que melhor representa as métricas que deseja exibir.</p>
+                    <p class="text-sm opacity-70">Escolha o tipo que melhor representa as mÃ©tricas que deseja exibir.</p>
                     <div id="chartTypeChoices" class="grid gap-3 sm:grid-cols-2">
                         <!-- preenchido via JS -->
                     </div>
@@ -61,19 +60,19 @@
                 <div data-chart-step="2" class="space-y-5 hidden">
                     <div class="grid gap-3">
                         <label class="grid gap-2">
-                            <span class="text-sm font-medium opacity-80">Nome do gráfico</span>
-                            <input type="text" id="chartNameInput" class="rounded-lg border border-white/20 bg-transparent px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/60" placeholder="Ex.: Evolução por indicador" />
+                            <span class="text-sm font-medium opacity-80">Nome do grÃ¡fico</span>
+                            <input type="text" id="chartNameInput" class="rounded-lg border border-white/20 bg-transparent px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/60" placeholder="Ex.: EvoluÃ§Ã£o por indicador" />
                         </label>
                     </div>
                     <div id="balanceteConfig" class="space-y-4 hidden">
                         <div>
                             <h3 class="text-sm font-semibold uppercase tracking-wide opacity-70">Indicadores</h3>
-                            <p class="text-xs opacity-60 mb-2">Selecione os indicadores que farão parte da visualização.</p>
+                            <p class="text-xs opacity-60 mb-2">Selecione os indicadores que farÃ£o parte da visualizaÃ§Ã£o.</p>
                             <div id="indicatorOptions" class="flex flex-wrap gap-2 text-sm"></div>
                         </div>
                         <div>
-                            <h3 class="text-sm font-semibold uppercase tracking-wide opacity-70">Métricas</h3>
-                            <p class="text-xs opacity-60 mb-2">Escolha os valores a serem exibidos e defina rótulos e cores.</p>
+                            <h3 class="text-sm font-semibold uppercase tracking-wide opacity-70">MÃ©tricas</h3>
+                            <p class="text-xs opacity-60 mb-2">Escolha os valores a serem exibidos e defina rÃ³tulos e cores.</p>
                             <div id="metricOptions" class="space-y-3"></div>
                         </div>
                     </div>
@@ -83,16 +82,16 @@
                             <select id="chartCategorySelect" class="rounded-lg border border-white/20 bg-transparent px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/60"></select>
                         </label>
                         <div>
-                            <h3 class="text-sm font-semibold uppercase tracking-wide opacity-70">Dimensões (linhas)</h3>
+                            <h3 class="text-sm font-semibold uppercase tracking-wide opacity-70">DimensÃµes (linhas)</h3>
                             <div id="dimensionOptions" class="flex flex-wrap gap-2 text-sm"></div>
                         </div>
                         <div>
-                            <h3 class="text-sm font-semibold uppercase tracking-wide opacity-70">Colunas numéricas</h3>
+                            <h3 class="text-sm font-semibold uppercase tracking-wide opacity-70">Colunas numÃ©ricas</h3>
                             <div id="valueOptions" class="space-y-3"></div>
                         </div>
                         <div>
-                            <h3 class="text-sm font-semibold uppercase tracking-wide opacity-70">Linhas incluídas</h3>
-                            <p class="text-xs opacity-60 mb-2">Selecione as linhas que participarão do gráfico (opcional).</p>
+                            <h3 class="text-sm font-semibold uppercase tracking-wide opacity-70">Linhas incluÃ­das</h3>
+                            <p class="text-xs opacity-60 mb-2">Selecione as linhas que participarÃ£o do grÃ¡fico (opcional).</p>
                             <div id="rowOptions" class="flex flex-wrap gap-2 text-xs"></div>
                         </div>
                     </div>
@@ -100,7 +99,7 @@
 
                 <div data-chart-step="3" class="space-y-5 hidden">
                     <div>
-                        <h3 class="text-sm font-semibold uppercase tracking-wide opacity-70 mb-2">Pré-visualização</h3>
+                        <h3 class="text-sm font-semibold uppercase tracking-wide opacity-70 mb-2">PrÃ©-visualizaÃ§Ã£o</h3>
                         <div class="relative" style="height: 400px;">
                             <canvas id="chartPreview" class="w-full h-full bg-black/10 rounded-xl border border-white/10"></canvas>
                         </div>
@@ -109,29 +108,29 @@
                     <div class="grid gap-3">
                         <label class="inline-flex items-center gap-2 text-sm">
                             <input type="checkbox" id="chartOptionStacked" class="rounded border-white/30 bg-transparent">
-                            <span>Empilhar séries (aplicável a barras/área).</span>
+                            <span>Empilhar sÃ©ries (aplicÃ¡vel a barras/Ã¡rea).</span>
                         </label>
                         <label class="inline-flex items-center gap-2 text-sm">
                             <input type="checkbox" id="chartOptionDataLabels" class="rounded border-white/30 bg-transparent" checked>
-                            <span>Exibir valores diretamente no gráfico.</span>
+                            <span>Exibir valores diretamente no grÃ¡fico.</span>
                         </label>
                         <label class="inline-flex items-center gap-2 text-sm">
                             <input type="checkbox" id="chartOptionXOffset" class="rounded border-white/30 bg-transparent" checked>
-                            <span>Espaçamento nas extremidades (linha/área)</span>
+                            <span>EspaÃ§amento nas extremidades (linha/Ã¡rea)</span>
                         </label>
                     </div>
                     <div id="yAxisConfigContainer" class="grid gap-3 md:grid-cols-3">
                         <label class="grid gap-1 text-sm">
-                            <span class="opacity-70">Eixo Y - Mínimo</span>
-                            <input type="number" id="chartOptionYMin" class="rounded-lg border border-white/20 bg-transparent px-3 py-2 text-sm" placeholder="automático" />
+                            <span class="opacity-70">Eixo Y - MÃ­nimo</span>
+                            <input type="number" id="chartOptionYMin" class="rounded-lg border border-white/20 bg-transparent px-3 py-2 text-sm" placeholder="automÃ¡tico" />
                         </label>
                         <label class="grid gap-1 text-sm">
-                            <span class="opacity-70">Eixo Y - Máximo</span>
-                            <input type="number" id="chartOptionYMax" class="rounded-lg border border-white/20 bg-transparent px-3 py-2 text-sm" placeholder="automático" />
+                            <span class="opacity-70">Eixo Y - MÃ¡ximo</span>
+                            <input type="number" id="chartOptionYMax" class="rounded-lg border border-white/20 bg-transparent px-3 py-2 text-sm" placeholder="automÃ¡tico" />
                         </label>
                         <label class="grid gap-1 text-sm">
                             <span class="opacity-70">Eixo Y - Intervalo</span>
-                            <input type="number" id="chartOptionYStep" class="rounded-lg border border-white/20 bg-transparent px-3 py-2 text-sm" placeholder="automático" />
+                            <input type="number" id="chartOptionYStep" class="rounded-lg border border-white/20 bg-transparent px-3 py-2 text-sm" placeholder="automÃ¡tico" />
                         </label>
                     </div>
                     <p id="chartModalFeedback" class="text-sm opacity-70 hidden"></p>
@@ -140,29 +139,29 @@
 
             <footer class="px-6 py-4 border-t border-white/10 flex items-center justify-between">
                 <button class="px-4 py-2 rounded-lg border border-white/15 hover:border-white/40 transition text-sm" data-chart-prev>Voltar</button>
-                <button class="px-4 py-2 rounded-lg {{ theme.buttons.primary }} text-sm font-medium" data-chart-next>Avançar</button>
-                <button class="hidden px-4 py-2 rounded-lg {{ theme.buttons.primary }} text-sm font-medium" data-chart-save>Salvar gráfico</button>
+                <button class="px-4 py-2 rounded-lg {{ theme.buttons.primary }} text-sm font-medium" data-chart-next>AvanÃ§ar</button>
+                <button class="hidden px-4 py-2 rounded-lg {{ theme.buttons.primary }} text-sm font-medium" data-chart-save>Salvar grÃ¡fico</button>
             </footer>
         </div>
     </div>
 </div>
 
-<!-- Modal de Confirmação de Exclusão -->
+<!-- Modal de ConfirmaÃ§Ã£o de ExclusÃ£o -->
 <div id="deleteConfirmModal" class="fixed inset-0 bg-black/60 backdrop-blur hidden z-50">
     <div class="w-full h-full flex items-center justify-center p-6">
         <div class="max-w-md w-full {{ theme.modal }} rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
             <header class="px-6 py-4 border-b border-white/10">
-                <h2 class="text-lg font-semibold text-red-400">⚠️ Confirmar Exclusão</h2>
+                <h2 class="text-lg font-semibold text-red-400">âš ï¸ Confirmar ExclusÃ£o</h2>
             </header>
             
             <div class="px-6 py-6">
-                <p class="text-sm opacity-90 mb-4">Você está prestes a excluir o gráfico:</p>
+                <p class="text-sm opacity-90 mb-4">VocÃª estÃ¡ prestes a excluir o grÃ¡fico:</p>
                 <div class="rounded-lg bg-white/5 border border-white/10 p-4 mb-4">
-                    <p class="font-semibold text-base" id="deleteChartName">Nome do Gráfico</p>
+                    <p class="font-semibold text-base" id="deleteChartName">Nome do GrÃ¡fico</p>
                     <p class="text-xs opacity-60 mt-1" id="deleteChartType">Tipo: Barras verticais</p>
                 </div>
                 <p class="text-sm text-yellow-400">
-                    <strong>Atenção:</strong> Esta ação não pode ser desfeita. O gráfico será removido permanentemente.
+                    <strong>AtenÃ§Ã£o:</strong> Esta aÃ§Ã£o nÃ£o pode ser desfeita. O grÃ¡fico serÃ¡ removido permanentemente.
                 </p>
             </div>
             
@@ -171,7 +170,7 @@
                     Cancelar
                 </button>
                 <button class="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 transition text-sm font-medium" data-delete-confirm>
-                    Sim, excluir gráfico
+                    Sim, excluir grÃ¡fico
                 </button>
             </footer>
         </div>
@@ -202,3 +201,4 @@
 </script>
 <script src="{{ url_for('static', filename='js/workflow_charts.js') }}"></script>
 {% endblock %}
+
