@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{{ workflow.nome }} Â· VisualizaÃ§Ã£o</title>
+    <title>{{ workflow.nome }} Â· Visualização</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
@@ -38,7 +38,7 @@
             </header>
 
             <section id="chartGrid" class="space-y-6">
-                <div class="text-sm opacity-70">Carregando gr&aacute;ficos cadastrados...</div>
+                <div class="text-sm opacity-70">Carregando gráficos cadastrados...</div>
             </section>
         </div>
     </main>
@@ -184,7 +184,7 @@
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
     <script src="{{ url_for('static', filename='js/workflow_charts.js') }}"></script>
     <script>
-        // Ocultar/neutralizar aÃ§Ãµes de ediÃ§Ã£o/exclusÃ£o caso renderizadas pelo JS de grÃ¡ficos
+        // Ocultar/neutralizar ações de edição/exclusão caso renderizadas pelo JS de gráficos
         document.addEventListener('DOMContentLoaded', function () {
             var btn = document.getElementById('openChartModal');
             if (btn) btn.remove();
