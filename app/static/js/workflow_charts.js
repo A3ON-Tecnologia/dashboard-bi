@@ -1,4 +1,4 @@
-﻿(() => {
+(() => {
     const workflow = window.__WORKFLOW__;
     if (!workflow || !window.dashboardUtils) {
         return;
@@ -27,7 +27,7 @@
                             const { x, y, base, width, height } = bar.getProps(['x', 'y', 'base', 'width', 'height'], true);
                             ctx.fillStyle = dataset.backgroundColor;
 
-                            // Desenhar retÃƒÆ’Ã‚Â¢ngulo com bordas arredondadas
+                            // Desenhar retângulo com bordas arredondadas
                             const borderRadius = dataset.borderRadius || 0;
                             ctx.beginPath();
 
@@ -78,7 +78,7 @@
     // Estado global para tooltip fixo
     let pinnedTooltip = null;
 
-    // FunÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o para criar tooltip HTML customizado
+    // Função para criar tooltip HTML customizado
     function createCustomTooltip(chart, point) {
         // Remover tooltip anterior se existir
         removeCustomTooltip();
@@ -99,7 +99,7 @@
             min-width: 200px;
         `;
 
-        // Extrair informaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes do ponto clicado
+        // Extrair informações do ponto clicado
         const datasetIndex = point.datasetIndex;
         const dataIndex = point.index;
         const dataset = chart.data.datasets[datasetIndex];
@@ -107,12 +107,12 @@
         const value = dataset.data[dataIndex];
         const indicatorLabel = chart.data.labels[dataIndex];
 
-        // Verificar se ÃƒÆ’Ã‚Â© diferenÃƒÆ’Ã‚Â§a percentual (sempre usa %)
+        // Verificar se é diferença percentual (sempre usa %)
         let formattedValue;
         if (dataset.metricKey === 'diferenca_percentual') {
             formattedValue = formatPercentage(value);
         } else {
-            // Usar tipo do indicador para outras mÃƒÆ’Ã‚Â©tricas
+            // Usar tipo do indicador para outras métricas
             const tipos = chart.options.indicatorTipos || {};
             const tipoValor = tipos[indicatorLabel] || tipos[label] || 'currency';
             formattedValue = formatValueByType(value, tipoValor);
@@ -137,7 +137,7 @@
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                ">ÃƒÆ’Ã¢â‚¬â€</button>
+                ">×</button>
             </div>
         `;
 
@@ -147,7 +147,7 @@
         const canvasRect = chart.canvas.getBoundingClientRect();
         const tooltipRect = tooltip.getBoundingClientRect();
 
-        // Calcular posiÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o (acima e centralizado com a barra)
+        // Calcular posição (acima e centralizado com a barra)
         const element = chart.getDatasetMeta(datasetIndex).data[dataIndex];
         const x = canvasRect.left + element.x;
         const y = canvasRect.top + element.y;
@@ -219,7 +219,7 @@
     const chartOptionYStep = document.getElementById('chartOptionYStep');
     const yAxisConfigContainer = document.getElementById('yAxisConfigContainer');
 
-    // Modal de confirmaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de exclusÃƒÆ’Ã‚Â£o
+    // Modal de confirmação de exclusão
     const deleteConfirmModal = document.getElementById('deleteConfirmModal');
     const deleteChartName = document.getElementById('deleteChartName');
     const deleteChartType = document.getElementById('deleteChartType');
@@ -249,7 +249,7 @@
         }));
     }
 
-    // Inicializar grÃƒÆ’Ã‚Â¡ficos existentes
+    // Inicializar gráficos existentes
     if (state.workflowType === 'balancete' && Array.isArray(workflow.balancete?.charts)) {
         state.charts = normalizeCharts(workflow.balancete.charts);
     } else if (state.workflowType === 'analise_jp' && Array.isArray(workflow.analise_jp?.charts)) {
@@ -400,7 +400,7 @@
             }
         });
 
-        // Modal de exclusÃƒÆ’Ã‚Â£o
+        // Modal de exclusão
         if (deleteConfirmModal) {
             deleteConfirmModal.addEventListener('click', (event) => {
                 if (event.target === deleteConfirmModal) closeDeleteModal();
@@ -455,51 +455,51 @@
 
     async function loadCharts() {
         try {
-            console.log('Carregando grÃƒÆ’Ã‚Â¡ficos salvos...');
+            console.log('Carregando gráficos salvos...');
             const endpoint = state.workflowType === 'balancete'
                 ? `/api/workflows/${workflow.id}/balancete/charts`
                 : `/api/workflows/${workflow.id}/analise-jp/charts`;
 
             const response = await apiRequest(endpoint, 'GET');
-            console.log('Resposta dos grÃƒÆ’Ã‚Â¡ficos:', response);
+            console.log('Resposta dos gráficos:', response);
 
             if (response && response.charts) {
                 state.charts = normalizeCharts(response.charts);
-                console.log('GrÃƒÆ’Ã‚Â¡ficos carregados:', state.charts.length);
+                console.log('Gráficos carregados:', state.charts.length);
             }
         } catch (error) {
-            console.error('Erro ao carregar grÃƒÆ’Ã‚Â¡ficos:', error);
+            console.error('Erro ao carregar gráficos:', error);
         }
     }
 
     function renderDatasetSummary() {
         if (!datasetSummary) return;
 
-        console.log('Renderizando sumÃƒÆ’Ã‚Â¡rio. Tipo:', state.workflowType, 'Dataset:', state.dataset);
+        console.log('Renderizando sumário. Tipo:', state.workflowType, 'Dataset:', state.dataset);
 
         let html = '';
 
         if (state.workflowType === 'balancete') {
-            // Verificar se hÃƒÆ’Ã‚Â¡ dataset E se tem records (pode ter dataset vazio)
+            // Verificar se há dataset E se tem records (pode ter dataset vazio)
             if (state.dataset && (state.dataset.records || state.dataset.indicator_options)) {
                 const totalIndicadores = state.dataset.total_indicadores || state.dataset.records?.length || 0;
-                const periodo1 = state.dataset.period_labels?.periodo_1 || 'PerÃƒÆ’Ã‚Â­odo 1';
-                const periodo2 = state.dataset.period_labels?.periodo_2 || 'PerÃƒÆ’Ã‚Â­odo 2';
+                const periodo1 = state.dataset.period_labels?.periodo_1 || 'Período 1';
+                const periodo2 = state.dataset.period_labels?.periodo_2 || 'Período 2';
 
                 html = `
                     <div class="flex flex-wrap gap-4">
                         <div class="flex items-center gap-2">
-                            <span class="text-green-400">ÃƒÂ¢Ã¢â‚¬â€Ã‚Â</span>
-                            <span><strong>${totalIndicadores}</strong> indicadores disponÃƒÆ’Ã‚Â­veis</span>
+                            <span class="text-green-400">●</span>
+                            <span><strong>${totalIndicadores}</strong> indicadores disponíveis</span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <span class="text-blue-400">ÃƒÂ¢Ã¢â‚¬â€Ã‚Â</span>
-                            <span>PerÃƒÆ’Ã‚Â­odos: <strong>${periodo1}</strong> vs <strong>${periodo2}</strong></span>
+                            <span class="text-blue-400">●</span>
+                            <span>Períodos: <strong>${periodo1}</strong> vs <strong>${periodo2}</strong></span>
                         </div>
                     </div>
                 `;
             } else {
-                html = '<p class="text-yellow-400">ÃƒÂ¢Ã…Â¡Ã‚Â  Nenhum dado de balancete encontrado. FaÃƒÆ’Ã‚Â§a o upload de um arquivo primeiro.</p>';
+                html = '<p class="text-yellow-400"> Nenhum dado de balancete encontrado. Faça o upload de um arquivo primeiro.</p>';
             }
         } else if (state.workflowType === 'analise_jp') {
             if (state.categories.length > 0) {
@@ -507,7 +507,7 @@
                 html = `
                     <div class="flex flex-wrap gap-4">
                         <div class="flex items-center gap-2">
-                            <span class="text-green-400">ÃƒÂ¢Ã¢â‚¬â€Ã‚Â</span>
+                            <span class="text-green-400">●</span>
                             <span><strong>${categoriesWithData.length}</strong> de <strong>${state.categories.length}</strong> categorias com dados</span>
                         </div>
                     </div>
@@ -520,7 +520,7 @@
 
                     return `
                                 <div class="flex items-center gap-3 text-sm">
-                                    <span class="${hasData ? 'text-green-400' : 'text-gray-500'}">ÃƒÂ¢Ã¢â‚¬â€Ã‚Â</span>
+                                    <span class="${hasData ? 'text-green-400' : 'text-gray-500'}">●</span>
                                     <span class="font-medium">${cat.nome || cat.label}</span>
                                     ${hasData ? `<span class="opacity-60">(${rowCount} linhas, ${colCount} colunas)</span>` : '<span class="opacity-60">(sem dados)</span>'}
                                 </div>
@@ -529,7 +529,7 @@
                     </div>
                 `;
             } else {
-                html = '<p class="text-yellow-400">ÃƒÂ¢Ã…Â¡Ã‚Â  Nenhuma categoria configurada para anÃƒÆ’Ã‚Â¡lise JP.</p>';
+                html = '<p class="text-yellow-400"> Nenhuma categoria configurada para análise JP.</p>';
             }
         }
 
@@ -564,16 +564,16 @@
     function renderChartGrid() {
         if (!chartGrid) return;
 
-        console.log('Renderizando grid com', state.charts.length, 'grÃƒÆ’Ã‚Â¡ficos');
+        console.log('Renderizando grid com', state.charts.length, 'gráficos');
 
         if (state.charts.length === 0) {
-            chartGrid.innerHTML = '<div class="text-sm opacity-70">Nenhum gr&aacute;fico cadastrado at&eacute; o momento. Clique em "Novo gr&aacute;fico" para come&ccedil;ar.</div>';
+            chartGrid.innerHTML = '<div class="text-sm opacity-70">Nenhum gráfico cadastrado até o momento. Clique em "Novo gráfico" para começar.</div>';
             return;
         }
 
         chartGrid.innerHTML = state.charts.map((chart, index) => {
             const chartConfig = chart.config || chart.chart || chart;
-            const chartName = chartConfig.nome || chartConfig.name || 'GrÃƒÆ’Ã‚Â¡fico sem nome';
+            const chartName = chartConfig.nome || chartConfig.name || 'Gráfico sem nome';
             const chartType = chartConfig.chart_type || chartConfig.type || 'bar';
             const chartId = chart.id || 'sem-id';
 
@@ -593,7 +593,7 @@
             `;
         }).join('');
 
-        // Renderizar cada grÃƒÆ’Ã‚Â¡fico
+        // Renderizar cada gráfico
         state.charts.forEach((chart, index) => {
             const chartConfig = chart.config || chart.chart || chart;
             const chartType = chartConfig.chart_type || chartConfig.type || 'bar';
@@ -606,11 +606,11 @@
     function renderChart(chart, index) {
         const container = document.querySelector(`#chart-${index} canvas`);
         if (!container) {
-            console.error('Canvas nÃƒÆ’Ã‚Â£o encontrado para grÃƒÆ’Ã‚Â¡fico', index);
+            console.error('Canvas não encontrado para gráfico', index);
             return;
         }
 
-        console.log('Renderizando grÃƒÆ’Ã‚Â¡fico', index, chart);
+        console.log('Renderizando gráfico', index, chart);
 
         const ctx = container.getContext('2d');
         const chartData = prepareChartData(chart);
@@ -632,21 +632,21 @@
                 }
             };
 
-            console.log('GrÃƒÆ’Ã‚Â¡fico', index, 'renderizado com sucesso');
+            console.log('Gráfico', index, 'renderizado com sucesso');
         } catch (error) {
-            console.error('Erro ao renderizar grÃƒÆ’Ã‚Â¡fico', index, error);
+            console.error('Erro ao renderizar gráfico', index, error);
         }
     }
 
     function prepareLineAreaChartData(chartData, chartConfig) {
-        // LÃƒÆ’Ã‚Â³gica exclusiva para balancete linha/ÃƒÆ’Ã‚Â¡rea
+        // Lógica exclusiva para balancete linha/área
         let labels = chartData.labels || [];
         let series = chartData.series || [];
         const chartType = chartConfig.chart_type || chartConfig.type || 'line';
         const periodMetrics = series.filter(s =>
             s.key === 'valor_periodo_1' ||
             s.key === 'valor_periodo_2' ||
-            s.label?.toLowerCase().includes('perÃƒÆ’Ã‚Â­odo') ||
+            s.label?.toLowerCase().includes('período') ||
             s.label?.toLowerCase().includes('periodo')
         );
 
@@ -654,8 +654,8 @@
         console.log('prepareLineAreaChartData - periodMetrics:', periodMetrics);
         console.log('prepareLineAreaChartData - labels originais:', labels);
 
-        // Ajuste: sempre que houver mais de uma mÃƒÆ’Ã‚Â©trica,
-        // reproduzir o layout da prÃƒÆ’Ã‚Â©-visualizaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o (eixo X = mÃƒÆ’Ã‚Â©tricas/perÃƒÆ’Ã‚Â­odos,
+        // Ajuste: sempre que houver mais de uma métrica,
+        // reproduzir o layout da pré-visualização (eixo X = métricas/períodos,
         // uma linha por indicador), independentemente das keys usadas.
         if (series.length > 1) {
             const temporalLabels = series.map(s => s.label);
@@ -692,12 +692,12 @@
             console.log('prepareLineAreaChartData - labels finais (ajustado):', labels);
             console.log('prepareLineAreaChartData - series finais (ajustado):', series);
 
-            // JÃƒÆ’Ã‚Â¡ montamos a estrutura final; nÃƒÆ’Ã‚Â£o precisamos da lÃƒÆ’Ã‚Â³gica antiga abaixo.
+            // Já montamos a estrutura final; não precisamos da lógica antiga abaixo.
             return { labels, series };
         }
 
         if (periodMetrics.length === series.length && periodMetrics.length > 1) {
-            // labels = perÃƒÆ’Ã‚Â­odos, datasets = indicadores
+            // labels = períodos, datasets = indicadores
             const temporalLabels = periodMetrics.map(s => s.label);
             const numIndicators = labels.length;
             const combinedSeries = [];
@@ -730,12 +730,12 @@
         return { labels, series };
     }
 
-    // VersÃƒÆ’Ã‚Â£o ajustada para garantir que grÃƒÆ’Ã‚Â¡ficos de linha/ÃƒÆ’Ã‚Â¡rea
-    // fiquem iguais ÃƒÆ’Ã‚Â  prÃƒÆ’Ã‚Â©-visualizaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o (eixo X = mÃƒÆ’Ã‚Â©tricas/perÃƒÆ’Ã‚Â­odos,
-    // uma linha por indicador quando houver mais de uma mÃƒÆ’Ã‚Â©trica).
+    // Versão ajustada para garantir que gráficos de linha/área
+    // fiquem iguais à pré-visualização (eixo X = métricas/períodos,
+    // uma linha por indicador quando houver mais de uma métrica).
     function prepareLineAreaChartDataV2(chartData, chartConfig) {
         let labels = chartData.labels || [];   // indicadores
-        let series = chartData.series || [];   // mÃƒÆ’Ã‚Â©tricas / perÃƒÆ’Ã‚Â­odos
+        let series = chartData.series || [];   // métricas / períodos
 
         console.log('prepareLineAreaChartDataV2 - chartConfig:', chartConfig);
         console.log('prepareLineAreaChartDataV2 - series originais:', series);
@@ -788,8 +788,8 @@
             const periodMetrics = series.filter(s =>
                 s.key === 'valor_periodo_1' ||
                 s.key === 'valor_periodo_2' ||
-                s.label?.toLowerCase().includes('perÃƒÆ’Ã‚Â­odo') ||
-                s.label?.toLowerCase().includes('periodo')
+                s.label?.toLowerCase().includes('período') ||
+                s.label?.toLowerCase().includes('período')
             );
             if (periodMetrics.length === series.length && periodMetrics.length > 1) {
                 const indicatorLabels = labels;
@@ -811,7 +811,7 @@
     }
 
     function prepareGenericChartData(chartData) {
-        // MantÃƒÆ’Ã‚Â©m a estrutura do backend
+        // Mantém a estrutura do backend
         return {
             labels: chartData.labels || [],
             series: chartData.series || []
@@ -828,7 +828,7 @@
         let labels = [];
         let series = [];
 
-        // SeparaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o absoluta de lÃƒÆ’Ã‚Â³gica!
+        // Separação absoluta de lógica!
         if (isBalancete && (chartType === 'line' || chartType === 'area')) {
             ({ labels, series } = prepareLineAreaChartData(chartData, chartConfig));
         } else if (chartType === 'bar' || chartType === 'bar-horizontal') {
@@ -846,13 +846,13 @@
                 borderColor: color,
                 borderWidth: 2,
                 valueKind: s.value_kind || 'number',
-                metricKey: s.key  // Adicionar key da mÃƒÆ’Ã‚Â©trica para identificar diferenca_percentual
+                metricKey: s.key  // Adicionar key da métrica para identificar diferenca_percentual
             };
             if (chartType === 'area') {
                 dataset.fill = true;
                 dataset.tension = 0.4;
                 dataset.borderWidth = 3;
-                // Adicionar pontos visÃƒÆ’Ã‚Â­veis
+                // Adicionar pontos visíveis
                 dataset.pointRadius = 6;
                 dataset.pointHoverRadius = 8;
                 dataset.pointBackgroundColor = color;
@@ -867,7 +867,7 @@
                 dataset.fill = false;
                 dataset.tension = 0.4;
                 dataset.borderWidth = 4;
-                // Adicionar pontos visÃƒÆ’Ã‚Â­veis e maiores
+                // Adicionar pontos visíveis e maiores
                 dataset.pointRadius = 6;
                 dataset.pointHoverRadius = 9;
                 dataset.pointBackgroundColor = color;
@@ -895,7 +895,7 @@
             finalType = 'line';
         }
 
-        // Config bÃƒÆ’Ã‚Â¡sica de datalabels branca para barras:
+        // Config básica de datalabels branca para barras:
         let pluginsConfig = {
             legend: {
                 display: true,
@@ -939,13 +939,13 @@
                 formatter: (value, context) => {
                     if (value == null) return '';
 
-                    // Verificar se ÃƒÆ’Ã‚Â© diferenÃƒÆ’Ã‚Â§a percentual (sempre usa %)
+                    // Verificar se é diferença percentual (sempre usa %)
                     const metricKey = context.dataset.metricKey;
                     if (metricKey === 'diferenca_percentual') {
                         return formatPercentage(value);
                     }
 
-                    // Usar tipo do indicador para outras mÃƒÆ’Ã‚Â©tricas
+                    // Usar tipo do indicador para outras métricas
                     const tipos = context.chart.options.indicatorTipos || {};
                     const indicadorNome = context.chart.data.labels[context.dataIndex];
                     const tipoValor = tipos[indicadorNome] || 'currency';
@@ -953,11 +953,11 @@
                 },
             };
         } else if (isBalancete && (chartType === 'line' || chartType === 'area')) {
-            // ConfiguraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de datalabels para linha e ÃƒÆ’Ã‚Â¡rea do balancete
+            // Configuração de datalabels para linha e área do balancete
             pluginsConfig.datalabels = {
                 display: true,
                 color: function (context) {
-                    // Usar a cor da linha/ÃƒÆ’Ã‚Â¡rea para o label
+                    // Usar a cor da linha/área para o label
                     return context.dataset.borderColor || '#fff';
                 },
                 backgroundColor: function (context) {
@@ -974,13 +974,13 @@
                 formatter: (value, context) => {
                     if (value == null) return '';
 
-                    // Verificar se ÃƒÆ’Ã‚Â© diferenÃƒÆ’Ã‚Â§a percentual (sempre usa %)
+                    // Verificar se é diferença percentual (sempre usa %)
                     const metricKey = context.dataset.metricKey;
                     if (metricKey === 'diferenca_percentual') {
                         return formatPercentage(value);
                     }
 
-                    // Para linha/ÃƒÆ’Ã‚Â¡rea, o label do dataset ÃƒÆ’Ã‚Â© o nome do indicador
+                    // Para linha/área, o label do dataset é o nome do indicador
                     const tipos = context.chart.options.indicatorTipos || {};
                     const indicadorNome = context.dataset.label;
                     const tipoValor = tipos[indicadorNome] || 'currency';
@@ -989,8 +989,8 @@
             };
         }
 
-        // Configurar scales com base nas opÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes do grÃƒÆ’Ã‚Â¡fico
-        // Override de datalabels para linha/ÃƒÆ’Ã‚Â¡rea do balancete
+        // Configurar scales com base nas opções do gráfico
+        // Override de datalabels para linha/área do balancete
         if (isBalancete && (chartType === 'line' || chartType === 'area')) {
             pluginsConfig.datalabels = {
                 display: true,
@@ -1006,7 +1006,7 @@
                 align: 'top',
                 anchor: 'center',
                 offset: function (context) {
-                    const base = 6;   // distÃƒÆ’Ã‚Â¢ncia mÃƒÆ’Ã‚Â­nima acima do ponto
+                    const base = 6;   // distância mínima acima do ponto
                     const step = 18;  // altura aproximada de uma label
                     return base + (context.datasetIndex || 0) * step;
                 },
@@ -1045,7 +1045,7 @@
                     color: 'rgba(255,255,255,0.15)',
                     lineWidth: 1
                 },
-                // Aplicar offset para grÃƒÆ’Ã‚Â¡ficos de barra e linha/ÃƒÆ’Ã‚Â¡rea
+                // Aplicar offset para gráficos de barra e linha/área
                 offset: true
             },
             y: {
@@ -1069,17 +1069,16 @@
             }
         };
 
-        // Aplicar configuraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes personalizadas do eixo Y
-        // Aplicar configuraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes personalizadas do eixo Y
+        // Aplicar configurações personalizadas do eixo Y
         if (chartOptions.yMin !== null && chartOptions.yMin !== undefined) {
             scalesConfig.y.min = chartOptions.yMin;
         }
 
         if (chartOptions.yMax !== null && chartOptions.yMax !== undefined) {
-            // Se o usuÃƒÆ’Ã‚Â¡rio definir manualmente, respeita esse valor
+            // Se o usuário definir manualmente, respeita esse valor
             scalesConfig.y.max = chartOptions.yMax;
         } else if (chartType === 'line' || chartType === 'area') {
-            // Ajuste automÃƒÆ’Ã‚Â¡tico: 20% acima do maior valor, arredondado em um valor ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œbonitoÃƒÂ¢Ã¢â€šÂ¬Ã‚Â
+            // Ajuste automático: 20% acima do maior valor, arredondado em um valor “bonito”
             let maxValue = null;
             (datasets || []).forEach((dataset) => {
                 (dataset.data || []).forEach((value) => {
@@ -1103,7 +1102,7 @@
                 else if (base <= 5) niceBase = 5;
                 else niceBase = 10;
 
-                const step = (niceBase * magnitude) / 5; // ~5 divisÃƒÆ’Ã‚Âµes no eixo
+                const step = (niceBase * magnitude) / 5; // ~5 divisões no eixo
                 const niceMax = Math.ceil(padded / step) * step;
 
                 scalesConfig.y.max = niceMax;
@@ -1114,12 +1113,12 @@
             scalesConfig.y.ticks.stepSize = chartOptions.yStep;
         }
 
-        // Garantir mais linhas de grade (incluindo zero) em grÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½ficos de barras verticais
+        // Garantir mais linhas de grade (incluindo zero) em gráficos de barras verticais
         if (chartType === 'bar') {
             if (!scalesConfig.y.ticks) {
                 scalesConfig.y.ticks = {};
             }
-            // NÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½o pular ticks automaticamente e limitar a uma quantidade razoÃƒÂ¯Ã‚Â¿Ã‚Â½ÃƒÂ¯Ã‚Â¿Ã‚Â½vel
+            // Não pular ticks automaticamente e limitar a uma quantidade razoável
             scalesConfig.y.ticks.autoSkip = false;
             if (!scalesConfig.y.ticks.maxTicksLimit) {
                 scalesConfig.y.ticks.maxTicksLimit = 10;
@@ -1208,7 +1207,7 @@
     function normalizeCharts(charts) {
         return charts.map(chartItem => {
             // Backend retorna: { chart: {...}, data: {...} }
-            // Onde chart contÃƒÆ’Ã‚Â©m: { id, nome, chart_type, indicadores, metricas, options }
+            // Onde chart contém: { id, nome, chart_type, indicadores, metricas, options }
 
             let id = null;
             let config = null;
@@ -1248,9 +1247,9 @@
             const chart = state.charts[editIndex];
             const chartConfig = chart.config || chart.chart || chart;
 
-            console.log('Editando grÃƒÆ’Ã‚Â¡fico:', chart);
+            console.log('Editando gráfico:', chart);
 
-            // Copiar toda a configuraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o
+            // Copiar toda a configuração
             state.modal.config = {
                 type: chartConfig.chart_type || chartConfig.type,
                 name: chartConfig.nome || chartConfig.name || '',
@@ -1272,7 +1271,7 @@
                 indicatorColors: { ...(chartConfig.options?.indicator_colors || {}) }
             };
 
-            console.log('Config carregada para ediÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o:', state.modal.config);
+            console.log('Config carregada para edição:', state.modal.config);
         }
 
         // Preencher input do nome
@@ -1326,7 +1325,7 @@
             });
         }
 
-        // Se for passo 3, preencher os campos de opÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes
+        // Se for passo 3, preencher os campos de opções
         if (step === 3) {
             if (chartOptionStacked) chartOptionStacked.checked = state.modal.config.options.stacked || false;
             if (chartOptionDataLabels) chartOptionDataLabels.checked = state.modal.config.options.dataLabels !== false;
@@ -1348,27 +1347,27 @@
         const titles = {
             1: 'Selecionar tipo',
             2: 'Configurar dados',
-            3: 'PrÃƒÆ’Ã‚Â©-visualizaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o e opÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes'
+            3: 'Pré-visualização e opções'
         };
 
-        chartModalTitle.textContent = titles[state.modal.step] || 'ConfiguraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o';
+        chartModalTitle.textContent = titles[state.modal.step] || 'Configuração';
     }
 
     function handleNextStep() {
-        // Validar antes de avanÃƒÆ’Ã‚Â§ar
+        // Validar antes de avançar
         if (state.modal.step === 1) {
             if (!state.modal.config.type) {
-                alert('Selecione um tipo de grÃƒÆ’Ã‚Â¡fico');
+                alert('Selecione um tipo de gráfico');
                 return;
             }
         } else if (state.modal.step === 2) {
-            // Pegar o nome do input antes de avanÃƒÆ’Ã‚Â§ar
+            // Pegar o nome do input antes de avançar
             if (chartNameInput) {
                 state.modal.config.name = chartNameInput.value.trim();
             }
 
             if (!state.modal.config.name) {
-                alert('Informe um nome para o grÃƒÆ’Ã‚Â¡fico');
+                alert('Informe um nome para o gráfico');
                 chartNameInput?.focus();
                 return;
             }
@@ -1380,12 +1379,12 @@
                     return;
                 }
                 if (!state.modal.config.metrics || state.modal.config.metrics.length === 0) {
-                    alert('Selecione pelo menos uma mÃƒÆ’Ã‚Â©trica');
+                    alert('Selecione pelo menos uma métrica');
                     return;
                 }
             } else if (state.workflowType === 'analise_jp') {
                 if (!state.modal.config.dimensions || state.modal.config.dimensions.length === 0) {
-                    alert('Selecione pelo menos uma dimensÃƒÆ’Ã‚Â£o');
+                    alert('Selecione pelo menos uma dimensão');
                     return;
                 }
                 if (!state.modal.config.values || state.modal.config.values.length === 0) {
@@ -1416,19 +1415,19 @@
         const button = event.target.closest('[data-chart-type]');
         if (!button) return;
 
-        // Remover seleÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o anterior
+        // Remover seleção anterior
         chartTypeChoices?.querySelectorAll('button').forEach(btn => {
             btn.classList.remove('ring-2', 'ring-blue-500', 'bg-blue-500/10');
         });
 
-        // Adicionar seleÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o visual
+        // Adicionar seleção visual
         button.classList.add('ring-2', 'ring-blue-500', 'bg-blue-500/10');
 
         // Salvar tipo selecionado
         state.modal.config.type = button.dataset.chartType;
 
-        console.log('Tipo de grÃƒÆ’Ã‚Â¡fico selecionado:', state.modal.config.type);
-        // NÃƒÆ’Ã†â€™O avanÃƒÆ’Ã‚Â§a automaticamente - usuÃƒÆ’Ã‚Â¡rio deve clicar em "AvanÃƒÆ’Ã‚Â§ar"
+        console.log('Tipo de gráfico selecionado:', state.modal.config.type);
+        // Nao avanca automaticamente - usuario deve clicar em "Avancar"
     }
 
     function renderDataConfigStep() {
@@ -1446,7 +1445,7 @@
                         if (checkbox) checkbox.checked = true;
                     });
 
-                    // Marcar mÃƒÆ’Ã‚Â©tricas e preencher valores
+                    // Marcar métricas e preencher valores
                     state.modal.config.metrics.forEach(metric => {
                         const container = metricOptionsContainer?.querySelector(`input[value="${metric.key}"]`)?.closest('div');
                         if (container) {
@@ -1474,7 +1473,7 @@
                         handleCategoryChange({ target: { value: state.modal.config.category } });
                     }
 
-                    // Marcar dimensÃƒÆ’Ã‚Âµes
+                    // Marcar dimensões
                     state.modal.config.dimensions.forEach(dimension => {
                         const checkbox = dimensionOptionsContainer?.querySelector(`input[value="${dimension}"]`);
                         if (checkbox) checkbox.checked = true;
@@ -1507,7 +1506,7 @@
     function renderBalanceteOptions() {
         if (!state.dataset || !state.dataset.indicator_options) return;
 
-        // Renderizar indicadores COM input de cor apenas para linha/ÃƒÆ’Ã‚Â¡rea
+        // Renderizar indicadores COM input de cor apenas para linha/área
         if (indicatorOptionsContainer) {
             const chartType = state.modal.config.type;
             const showIndicatorColors = chartType === 'line' || chartType === 'area';
@@ -1524,7 +1523,7 @@
             }).join('');
         }
 
-        // Renderizar mÃƒÆ’Ã‚Â©tricas
+        // Renderizar métricas
         if (metricOptionsContainer) {
             const metrics = state.dataset.value_options || [];
             const chartType = state.modal.config.type;
@@ -1535,7 +1534,7 @@
                 return `
                     <div class="flex items-center gap-3 p-3 rounded-lg border border-white/10">
                         <input type="checkbox" value="${metric.key}" class="rounded">
-                        <input type="text" value="${metric.label}" placeholder="RÃƒÆ’Ã‚Â³tulo" class="flex-1 bg-transparent border-none focus:outline-none text-sm">
+                        <input type="text" value="${metric.label}" placeholder="Rótulo" class="flex-1 bg-transparent border-none focus:outline-none text-sm">
                         ${showMetricColors ? `<input type="color" value="${metricColor}" class="w-8 h-8 rounded cursor-pointer metric-color-picker" data-metric="${metric.key}">` : ''}
                     </div>
                 `;
@@ -1562,7 +1561,7 @@
         const dataset = state.categoryDatasets.get(categorySlug);
         if (!dataset) return;
 
-        // Renderizar dimensÃƒÆ’Ã‚Âµes (colunas nÃƒÆ’Ã‚Â£o numÃƒÆ’Ã‚Â©ricas)
+        // Renderizar dimensões (colunas não numéricas)
         if (dimensionOptionsContainer) {
             const dimensionFields = dataset.fields.filter(f => !dataset.numeric_fields.includes(f));
             dimensionOptionsContainer.innerHTML = dimensionFields.map(field => `
@@ -1573,18 +1572,18 @@
             `).join('');
         }
 
-        // Renderizar valores (colunas numÃƒÆ’Ã‚Â©ricas)
+        // Renderizar valores (colunas numéricas)
         if (valueOptionsContainer) {
             valueOptionsContainer.innerHTML = dataset.numeric_fields.map((field, index) => `
                 <div class="flex items-center gap-3 p-3 rounded-lg border border-white/10">
                     <input type="checkbox" value="${field}" class="rounded">
-                    <input type="text" value="${field}" placeholder="RÃƒÆ’Ã‚Â³tulo" class="flex-1 bg-transparent border-none focus:outline-none text-sm" data-field="${field}">
+                    <input type="text" value="${field}" placeholder="Rótulo" class="flex-1 bg-transparent border-none focus:outline-none text-sm" data-field="${field}">
                     <input type="color" value="${COLOR_PALETTE[index % COLOR_PALETTE.length]}" class="w-8 h-8 rounded cursor-pointer" data-field="${field}">
                 </div>
             `).join('');
         }
 
-        // Renderizar linhas disponÃƒÆ’Ã‚Â­veis
+        // Renderizar linhas disponíveis
         if (rowOptionsContainer) {
             rowOptionsContainer.innerHTML = dataset.records.slice(0, 20).map((record, index) => {
                 const label = Object.values(record).slice(0, 2).join(' - ');
@@ -1635,7 +1634,7 @@
                     key: key,
                     label: labelInput?.value || key
                 };
-                // Adicionar cor apenas se o input de cor existir (grÃƒÆ’Ã‚Â¡ficos de barras)
+                // Adicionar cor apenas se o input de cor existir (gráficos de barras)
                 if (colorInput) {
                     metricData.color = colorInput.value;
                 }
@@ -1738,11 +1737,11 @@
     function renderPreview() {
         console.log('renderPreview chamado');
         console.log('chartPreviewCanvas:', chartPreviewCanvas);
-        console.log('ChartJs disponÃƒÆ’Ã‚Â­vel:', typeof ChartJs);
+        console.log('ChartJs disponível:', typeof ChartJs);
         console.log('state.modal.config:', state.modal.config);
 
         if (!chartPreviewCanvas) {
-            console.error('Canvas nÃƒÆ’Ã‚Â£o encontrado!');
+            console.error('Canvas não encontrado!');
             return;
         }
 
@@ -1752,12 +1751,12 @@
             state.previewInstance = null;
         }
 
-        // Validar configuraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o
+        // Validar configuração
         const config = state.modal.config;
         if (!config.type || !config.name) {
-            console.log('ConfiguraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o incompleta:', config);
+            console.log('Configuração incompleta:', config);
             if (modalFeedback) {
-                modalFeedback.textContent = 'Configure o nome e tipo do grÃƒÆ’Ã‚Â¡fico';
+                modalFeedback.textContent = 'Configure o nome e tipo do gráfico';
                 modalFeedback.classList.remove('hidden');
             }
             return;
@@ -1778,9 +1777,9 @@
                 return;
             }
             if (!config.metrics || config.metrics.length === 0) {
-                console.log('Nenhuma mÃƒÆ’Ã‚Â©trica selecionada');
+                console.log('Nenhuma métrica selecionada');
                 if (modalFeedback) {
-                    modalFeedback.textContent = 'Selecione pelo menos uma mÃƒÆ’Ã‚Â©trica';
+                    modalFeedback.textContent = 'Selecione pelo menos uma métrica';
                     modalFeedback.classList.remove('hidden');
                 }
                 return;
@@ -1808,7 +1807,7 @@
                     borderWidth: 2
                 }];
             } else if ((config.type === 'line' || config.type === 'area') && config.metrics.length > 1) {
-                // Para linha/ÃƒÆ’Ã‚Â¡rea com mÃƒÆ’Ã‚Âºltiplos perÃƒÆ’Ã‚Â­odos, criar sÃƒÆ’Ã‚Â©ries temporais
+                // Para linha/área com múltiplos períodos, criar séries temporais
                 const temporalLabels = config.metrics.map(m => m.label);
 
                 datasets = config.indicators.map((indicator, i) => ({
@@ -1821,10 +1820,10 @@
 
                 labels = temporalLabels;
             } else if (config.type === 'bar' && config.metrics.length > 1) {
-                // Para barras VERTICAIS: perÃƒÆ’Ã‚Â­odos na legenda (com cores), indicadores no eixo X
+                // Para barras VERTICAIS: períodos na legenda (com cores), indicadores no eixo X
                 labels = config.indicators; // Indicadores no eixo X
                 datasets = config.metrics.map(metric => ({
-                    label: metric.label, // PerÃƒÆ’Ã‚Â­odo na legenda (2024, 2025)
+                    label: metric.label, // Período na legenda (2024, 2025)
                     data: config.indicators.map(ind => getValueForIndicatorAndMetric(ind, metric.key)),
                     backgroundColor: metric.color, // Usar cor escolhida
                     borderColor: metric.color,
@@ -1843,7 +1842,7 @@
         } else if (state.workflowType === 'analise_jp') {
             if (!config.dimensions || config.dimensions.length === 0) {
                 if (modalFeedback) {
-                    modalFeedback.textContent = 'Selecione pelo menos uma dimensÃƒÆ’Ã‚Â£o';
+                    modalFeedback.textContent = 'Selecione pelo menos uma dimensão';
                     modalFeedback.classList.remove('hidden');
                 }
                 return;
@@ -1901,7 +1900,7 @@
                 processed.fill = true;
                 processed.tension = 0.4;
                 processed.borderWidth = 3;
-                // Adicionar pontos visÃƒÆ’Ã‚Â­veis
+                // Adicionar pontos visíveis
                 processed.pointRadius = 6;
                 processed.pointHoverRadius = 8;
                 processed.pointBackgroundColor = processed.borderColor;
@@ -1916,7 +1915,7 @@
                 processed.fill = false;
                 processed.tension = 0.4;
                 processed.borderWidth = 4;
-                // Adicionar pontos visÃƒÆ’Ã‚Â­veis e maiores
+                // Adicionar pontos visíveis e maiores
                 processed.pointRadius = 6;
                 processed.pointHoverRadius = 9;
                 processed.pointBackgroundColor = processed.borderColor;
@@ -1987,7 +1986,7 @@
                                     ? context.parsed.x
                                     : (context.parsed.y !== undefined ? context.parsed.y : context.parsed);
 
-                                // Detectar tipo de valor pela mÃƒÆ’Ã‚Â©trica
+                                // Detectar tipo de valor pela métrica
                                 const metricKey = config.metrics?.[context.datasetIndex]?.key;
                                 if (metricKey === 'diferenca_percentual') {
                                     label += formatPercentage(value);
@@ -2011,7 +2010,7 @@
                         borderRadius: 4,
                         padding: 4,
                         font: { weight: 'bold', size: (config.type === 'line' || config.type === 'area') ? 12 : 14 },
-                        // empilhar labels acima do ponto na prÃƒÆ’Ã‚Â©-visualizaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o tambÃƒÆ’Ã‚Â©m
+                        // empilhar labels acima do ponto na pré-visualização também
                         align: (config.type === 'line' || config.type === 'area') ? 'top' : 'center',
                         anchor: 'center',
                         offset: function (context) {
@@ -2025,7 +2024,7 @@
                         formatter: (value, context) => {
                             if (value === null || value === undefined) return '';
 
-                            // Detectar tipo de valor pela mÃƒÆ’Ã‚Â©trica
+                            // Detectar tipo de valor pela métrica
                             const metricKey = config.metrics?.[context.datasetIndex]?.key;
                             if (metricKey === 'diferenca_percentual') {
                                 return value.toFixed(2) + '%';
@@ -2052,7 +2051,7 @@
                             drawTicks: true,
                             offset: true
                         },
-                        // Aplicar offset para grÃƒÆ’Ã‚Â¡ficos de barra e linha/ÃƒÆ’Ã‚Â¡rea
+                        // Aplicar offset para gráficos de barra e linha/área
                         offset: true,
                         ticks: {
                             color: '#ffffff',
@@ -2061,7 +2060,7 @@
                             callback: function (value) {
                                 // Para barras horizontais, eixo X tem valores (formatar)
                                 if (config.type === 'bar-horizontal') {
-                                    // Detectar se ÃƒÆ’Ã‚Â© percentual ou moeda
+                                    // Detectar se é percentual ou moeda
                                     const hasPercentage = config.metrics?.some(m => m.key === 'diferenca_percentual');
                                     const hasCurrency = config.metrics?.some(m => m.key !== 'diferenca_percentual');
 
@@ -2076,7 +2075,7 @@
                                         return value.toFixed(2) + '%';
                                     }
                                 }
-                                // Para outros grÃƒÆ’Ã‚Â¡ficos (barras verticais), eixo X tem labels dos indicadores
+                                // Para outros gráficos (barras verticais), eixo X tem labels dos indicadores
                                 return this.getLabelForValue(value);
                             }
                         },
@@ -2115,7 +2114,7 @@
             }
         };
 
-        console.log('ConfiguraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o do grÃƒÆ’Ã‚Â¡fico:', chartConfig);
+        console.log('Configuração do gráfico:', chartConfig);
         try {
             state.previewInstance = new ChartJs(ctx, chartConfig);
 
@@ -2128,9 +2127,9 @@
                 }
             };
 
-            console.log('GrÃƒÆ’Ã‚Â¡fico criado com sucesso!');
+            console.log('Gráfico criado com sucesso!');
         } catch (error) {
-            console.error('Erro ao criar grÃƒÆ’Ã‚Â¡fico:', error);
+            console.error('Erro ao criar gráfico:', error);
             if (modalFeedback) {
                 modalFeedback.textContent = 'Erro ao criar preview: ' + error.message;
                 modalFeedback.classList.remove('hidden');
@@ -2149,10 +2148,10 @@
         console.log('Config atual:', state.modal.config);
 
         try {
-            // Validar configuraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o antes de salvar
+            // Validar configuração antes de salvar
             if (!state.modal.config.name) {
                 if (modalFeedback) {
-                    modalFeedback.textContent = 'Informe um nome para o grÃƒÆ’Ã‚Â¡fico';
+                    modalFeedback.textContent = 'Informe um nome para o gráfico';
                     modalFeedback.classList.remove('hidden');
                 }
                 return;
@@ -2160,7 +2159,7 @@
 
             if (!state.modal.config.type) {
                 if (modalFeedback) {
-                    modalFeedback.textContent = 'Selecione um tipo de grÃƒÆ’Ã‚Â¡fico';
+                    modalFeedback.textContent = 'Selecione um tipo de gráfico';
                     modalFeedback.classList.remove('hidden');
                 }
                 return;
@@ -2183,7 +2182,7 @@
                 }
                 if (!state.modal.config.metrics || state.modal.config.metrics.length === 0) {
                     if (modalFeedback) {
-                        modalFeedback.textContent = 'Selecione pelo menos uma mÃƒÆ’Ã‚Â©trica';
+                        modalFeedback.textContent = 'Selecione pelo menos uma métrica';
                         modalFeedback.classList.remove('hidden');
                     }
                     return;
@@ -2192,7 +2191,7 @@
                 payload.metricas = state.modal.config.metrics;
                 // Salvar cores dos indicadores nas options
                 payload.options.indicator_colors = state.modal.config.indicatorColors || {};
-                console.log('MÃƒÆ’Ã‚Â©tricas sendo salvas:', payload.metricas);
+                console.log('Métricas sendo salvas:', payload.metricas);
                 console.log('Cores dos indicadores sendo salvas:', payload.options.indicator_colors);
             } else if (state.workflowType === 'analise_jp') {
                 if (!state.modal.config.category) {
@@ -2204,7 +2203,7 @@
                 }
                 if (!state.modal.config.dimensions || state.modal.config.dimensions.length === 0) {
                     if (modalFeedback) {
-                        modalFeedback.textContent = 'Selecione pelo menos uma dimensÃƒÆ’Ã‚Â£o';
+                        modalFeedback.textContent = 'Selecione pelo menos uma dimensão';
                         modalFeedback.classList.remove('hidden');
                     }
                     return;
@@ -2226,18 +2225,18 @@
 
             console.log('Payload a ser enviado:', payload);
 
-            // Determinar endpoint e mÃƒÆ’Ã‚Â©todo
+            // Determinar endpoint e método
             let endpoint;
             let method;
 
             if (state.modal.mode === 'edit') {
-                // Modo ediÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o - precisa do ID na URL
+                // Modo edição - precisa do ID na URL
                 const chartId = state.charts[state.modal.editIndex]?.id;
 
                 if (!chartId) {
-                    console.error('ID do grÃƒÆ’Ã‚Â¡fico nÃƒÆ’Ã‚Â£o encontrado para ediÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o');
+                    console.error('ID do gráfico não encontrado para edição');
                     if (modalFeedback) {
-                        modalFeedback.textContent = 'Erro: ID do grÃƒÆ’Ã‚Â¡fico nÃƒÆ’Ã‚Â£o encontrado';
+                        modalFeedback.textContent = 'Erro: ID do gráfico não encontrado';
                         modalFeedback.classList.remove('hidden');
                     }
                     return;
@@ -2248,7 +2247,7 @@
                     : `/api/workflows/${workflow.id}/analise-jp/charts/${chartId}`;
                 method = 'PUT';
             } else {
-                // Modo criaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o
+                // Modo criação
                 endpoint = state.workflowType === 'balancete'
                     ? `/api/workflows/${workflow.id}/balancete/charts`
                     : `/api/workflows/${workflow.id}/analise-jp/charts`;
@@ -2256,15 +2255,14 @@
             }
 
             console.log('Endpoint:', endpoint);
-            console.log('MÃƒÆ’Ã‚Â©todo:', method);
-
+            console.log('Método:', method);
             const response = await apiRequest(endpoint, method, payload);
 
             console.log('Resposta do servidor:', response);
 
             if (response) {
-                console.log('GrÃƒÆ’Ã‚Â¡fico salvo com sucesso!');
-                // Recarregar lista de grÃƒÆ’Ã‚Â¡ficos
+                console.log('Gráfico salvo com sucesso!');
+                // Recarregar lista de gráficos
                 const chartsEndpoint = state.workflowType === 'balancete'
                     ? `/api/workflows/${workflow.id}/balancete/charts`
                     : `/api/workflows/${workflow.id}/analise-jp/charts`;
@@ -2278,9 +2276,9 @@
                 closeModal();
             }
         } catch (error) {
-            console.error('Erro ao salvar grÃƒÆ’Ã‚Â¡fico:', error);
+            console.error('Erro ao salvar gráfico:', error);
             if (modalFeedback) {
-                modalFeedback.textContent = 'Erro ao salvar grÃƒÆ’Ã‚Â¡fico: ' + error.message;
+                modalFeedback.textContent = 'Erro ao salvar gráfico: ' + error.message;
                 modalFeedback.classList.remove('hidden');
             }
         }
@@ -2293,15 +2291,15 @@
     function openDeleteModal(index) {
         const chart = state.charts[index];
         const chartConfig = chart.config || chart.chart || chart;
-        const chartName = chartConfig.nome || chartConfig.name || 'GrÃƒÆ’Ã‚Â¡fico sem nome';
+        const chartName = chartConfig.nome || chartConfig.name || 'Gráfico sem nome';
         const chartType = chartConfig.chart_type || chartConfig.type || 'bar';
 
-        // Mapear tipo para nome legÃƒÆ’Ã‚Â­vel
+        // Mapear tipo para nome legível
         const typeNames = {
             'bar': 'Barras verticais',
             'bar-horizontal': 'Barras horizontais',
             'line': 'Linha',
-            'area': 'ÃƒÆ’Ã‚Ârea',
+            'area': 'Área',
             'pie': 'Pizza',
             'donut': 'Donut',
             'table': 'Tabela'
@@ -2337,8 +2335,8 @@
             console.log('Chart ID encontrado:', chartId);
 
             if (!chartId) {
-                console.error('ID do grÃƒÆ’Ã‚Â¡fico nÃƒÆ’Ã‚Â£o encontrado. Estrutura do chart:', chart);
-                alert('Erro: ID do grÃƒÆ’Ã‚Â¡fico nÃƒÆ’Ã‚Â£o encontrado. Verifique o console.');
+                console.error('ID do gráfico não encontrado. Estrutura do chart:', chart);
+                alert('Erro: ID do gráfico não encontrado. Verifique o console.');
                 return;
             }
 
@@ -2346,13 +2344,13 @@
                 ? `/api/workflows/${workflow.id}/balancete/charts/${chartId}`
                 : `/api/workflows/${workflow.id}/analise-jp/charts/${chartId}`;
 
-            console.log('Endpoint de exclusÃƒÆ’Ã‚Â£o:', endpoint);
+            console.log('Endpoint de exclusão:', endpoint);
 
             await apiRequest(endpoint, 'DELETE');
 
-            console.log('GrÃƒÆ’Ã‚Â¡fico excluÃƒÆ’Ã‚Â­do com sucesso!');
+            console.log('Gráfico excluído com sucesso!');
 
-            // Recarregar lista de grÃƒÆ’Ã‚Â¡ficos
+            // Recarregar lista de gráficos
             const chartsEndpoint = state.workflowType === 'balancete'
                 ? `/api/workflows/${workflow.id}/balancete/charts`
                 : `/api/workflows/${workflow.id}/analise-jp/charts`;
@@ -2364,8 +2362,8 @@
 
             renderChartGrid();
         } catch (error) {
-            console.error('Erro ao excluir grÃƒÆ’Ã‚Â¡fico:', error);
-            alert('Erro ao excluir grÃƒÆ’Ã‚Â¡fico: ' + error.message);
+            console.error('Erro ao excluir gráfico:', error);
+            alert('Erro ao excluir gráfico: ' + error.message);
         }
     }
 

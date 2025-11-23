@@ -1,4 +1,4 @@
-﻿THEMES = {
+THEMES = {
     'dark': {
         'name': 'dark',
         'bg': 'bg-gray-900',
