@@ -4,7 +4,7 @@
         return;
     }
 
-     const READ_ONLY = !!window.__READ_ONLY__;
+    const READ_ONLY = !!window.__READ_ONLY__;
     const ChartJs = window.Chart;
 
     if (ChartJs && ChartJs.register && window.ChartDataLabels) {
@@ -542,7 +542,7 @@
             datasetSummary.querySelectorAll('span.text-green-400').forEach(el => toDot(el, 'bg-green-400'));
             datasetSummary.querySelectorAll('span.text-blue-400').forEach(el => toDot(el, 'bg-blue-400'));
             datasetSummary.querySelectorAll('span.text-gray-500').forEach(el => toDot(el, 'bg-gray-500'));
-        } catch {}
+        } catch { }
     }
 
     function updateModalAvailability() {
@@ -567,7 +567,7 @@
         console.log('Renderizando grid com', state.charts.length, 'grÃƒÆ’Ã‚Â¡ficos');
 
         if (state.charts.length === 0) {
-            chartGrid.innerHTML = '<div class="text-sm opacity-70">Nenhum grÃƒÆ’Ã‚Â¡fico cadastrado atÃƒÆ’Ã‚Â© o momento. Clique em "Novo grÃƒÆ’Ã‚Â¡fico" para comeÃƒÆ’Ã‚Â§ar.</div>';
+            chartGrid.innerHTML = '<div class="text-sm opacity-70">Nenhum gr&aacute;fico cadastrado at&eacute; o momento. Clique em "Novo gr&aacute;fico" para come&ccedil;ar.</div>';
             return;
         }
 

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -8,14 +9,24 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
     <style>
-        body { font-family: 'Space Mono', monospace; }
-        .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
-        .scrollbar-thin::-webkit-scrollbar-thumb { border-radius: 9999px; }
+        body {
+            font-family: 'Space Mono', monospace;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            border-radius: 9999px;
+        }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 </head>
+
 <body class="{{ theme.bg }} {{ theme.text }} min-h-screen">
     <main class="min-h-screen overflow-y-auto scrollbar-thin">
         <div class="w-full px-3 md:px-4 lg:px-6 py-4 space-y-6">
@@ -27,7 +38,7 @@
             </header>
 
             <section id="chartGrid" class="space-y-6">
-                <div class="text-sm opacity-70">Carregando grÃ¡ficos cadastrados...</div>
+                <div class="text-sm opacity-70">Carregando gr&aacute;ficos cadastrados...</div>
             </section>
         </div>
     </main>
@@ -36,19 +47,23 @@
     <div class="fixed top-4 right-4 z-50 flex items-center gap-2">
         <!-- Botão pequeno para trocar tema -->
         <button id="themeTrigger" title="Trocar tema" aria-label="Trocar tema"
-                class="p-2 rounded-lg border border-white/15 hover:border-white/40 bg-white/5 backdrop-blur">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="opacity-90">
+            class="p-2 rounded-lg border border-white/15 hover:border-white/40 bg-white/5 backdrop-blur">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="opacity-90">
                 <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
             </svg>
         </button>
         <!-- Botão pequeno para configurar layout -->
         <button id="openLayoutModal" title="Configurar layout" aria-label="Configurar layout"
-                class="p-2 rounded-lg border border-white/15 hover:border-white/40 bg-white/5 backdrop-blur">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="opacity-90">
-                <rect x="3" y="3" width="7" height="7" rx="1"/>
-                <rect x="14" y="3" width="7" height="7" rx="1"/>
-                <rect x="3" y="14" width="7" height="7" rx="1"/>
-                <rect x="14" y="14" width="7" height="7" rx="1"/>
+            class="p-2 rounded-lg border border-white/15 hover:border-white/40 bg-white/5 backdrop-blur">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="opacity-90">
+                <rect x="3" y="3" width="7" height="7" rx="1" />
+                <rect x="14" y="3" width="7" height="7" rx="1" />
+                <rect x="3" y="14" width="7" height="7" rx="1" />
+                <rect x="14" y="14" width="7" height="7" rx="1" />
             </svg>
         </button>
     </div>
@@ -56,7 +71,8 @@
     <!-- Modal de Layout -->
     <div id="layoutModal" class="fixed inset-0 bg-black/60 hidden z-50">
         <div class="w-full h-full flex items-center justify-center p-6">
-            <div class="max-w-2xl w-full {{ theme.modal }} rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
+            <div
+                class="max-w-2xl w-full {{ theme.modal }} rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
                 <header class="px-6 py-4 border-b border-white/10 flex items-center justify-between">
                     <h2 class="text-lg font-semibold">Layout de visualização</h2>
                     <button class="p-2 rounded-lg hover:bg-white/10" data-layout-close>✕</button>
@@ -73,16 +89,19 @@
                     <div class="grid gap-2">
                         <label class="text-sm opacity-80">Ordem e seleção de gráficos</label>
                         <p class="text-xs opacity-60">Marque para exibir e use ↑/↓ para ordenar.</p>
-                        <ul id="layoutChartList" class="divide-y divide-white/10 rounded-lg border border-white/10"></ul>
+                        <ul id="layoutChartList" class="divide-y divide-white/10 rounded-lg border border-white/10">
+                        </ul>
                     </div>
                 </div>
                 <footer class="px-6 py-4 border-t border-white/10 flex items-center justify-end gap-3">
-                    <button class="px-4 py-2 rounded-lg border border-white/20 hover:border-white/40" data-layout-cancel>Cancelar</button>
-                    <button class="px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-medium" data-layout-save>Salvar</button>
+                    <button class="px-4 py-2 rounded-lg border border-white/20 hover:border-white/40"
+                        data-layout-cancel>Cancelar</button>
+                    <button class="px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-medium"
+                        data-layout-save>Salvar</button>
                 </footer>
             </div>
         </div>
-</div>
+    </div>
 
     <div id="toastContainer" class="fixed top-4 right-4 z-50 flex flex-col gap-3 pointer-events-none"></div>
 
@@ -96,39 +115,42 @@
                 </div>
                 <div class="px-6 py-6 grid gap-4">
                     {% for option in theme_options %}
-                    <button class="flex items-center justify-between px-4 py-3 rounded-xl border border-white/10 hover:border-white/40 transition" data-theme-choice="{{ option.slug }}">
+                    <button
+                        class="flex items-center justify-between px-4 py-3 rounded-xl border border-white/10 hover:border-white/40 transition"
+                        data-theme-choice="{{ option.slug }}">
                         <div>
                             <p class="font-medium">{{ option.label }}</p>
                             <p class="text-xs opacity-60">Aplicar cores do tema {{ option.label }}</p>
                         </div>
                         <div class="flex gap-1">
                             {% if option.slug == 'dark' %}
-                                <span class="w-8 h-8 rounded-full bg-black border border-gray-600"></span>
-                                <span class="w-8 h-8 rounded-full bg-gray-600"></span>
-                                <span class="w-8 h-8 rounded-full bg-blue-500"></span>
+                            <span class="w-8 h-8 rounded-full bg-black border border-gray-600"></span>
+                            <span class="w-8 h-8 rounded-full bg-gray-600"></span>
+                            <span class="w-8 h-8 rounded-full bg-blue-500"></span>
                             {% elif option.slug == 'light' %}
-                                <span class="w-8 h-8 rounded-full bg-white border border-gray-200"></span>
-                                <span class="w-8 h-8 rounded-full bg-gray-300"></span>
-                                <span class="w-8 h-8 rounded-full bg-blue-500"></span>
+                            <span class="w-8 h-8 rounded-full bg-white border border-gray-200"></span>
+                            <span class="w-8 h-8 rounded-full bg-gray-300"></span>
+                            <span class="w-8 h-8 rounded-full bg-blue-500"></span>
                             {% elif option.slug == 'neon' %}
-                                <span class="w-8 h-8 rounded-full bg-purple-500 shadow-sm shadow-purple-500/50"></span>
-                                <span class="w-8 h-8 rounded-full bg-green-400 shadow-sm shadow-green-400/50"></span>
-                                <span class="w-8 h-8 rounded-full bg-black border border-purple-500/50"></span>
+                            <span class="w-8 h-8 rounded-full bg-purple-500 shadow-sm shadow-purple-500/50"></span>
+                            <span class="w-8 h-8 rounded-full bg-green-400 shadow-sm shadow-green-400/50"></span>
+                            <span class="w-8 h-8 rounded-full bg-black border border-purple-500/50"></span>
                             {% elif option.slug == 'futurist' %}
-                                <span class="w-8 h-8 rounded-full bg-blue-400"></span>
-                                <span class="w-8 h-8 rounded-full bg-purple-500"></span>
-                                <span class="w-8 h-8 rounded-full bg-cyan-400"></span>
+                            <span class="w-8 h-8 rounded-full bg-blue-400"></span>
+                            <span class="w-8 h-8 rounded-full bg-purple-500"></span>
+                            <span class="w-8 h-8 rounded-full bg-cyan-400"></span>
                             {% else %}
-                                <span class="w-8 h-8 rounded-full bg-blue-500"></span>
-                                <span class="w-8 h-8 rounded-full bg-emerald-500"></span>
-                                <span class="w-8 h-8 rounded-full bg-amber-500"></span>
+                            <span class="w-8 h-8 rounded-full bg-blue-500"></span>
+                            <span class="w-8 h-8 rounded-full bg-emerald-500"></span>
+                            <span class="w-8 h-8 rounded-full bg-amber-500"></span>
                             {% endif %}
                         </div>
                     </button>
                     {% endfor %}
                 </div>
                 <div class="px-6 py-4 border-t border-white/10 text-right">
-                    <button class="px-4 py-2 rounded-lg border border-white/20 hover:border-white/40 transition" data-theme-close>
+                    <button class="px-4 py-2 rounded-lg border border-white/20 hover:border-white/40 transition"
+                        data-theme-close>
                         Fechar
                     </button>
                 </div>
@@ -137,52 +159,52 @@
     </div>
 
     <script>
-        window.__WORKFLOW__ = {{ workflow|tojson }};
-        window.__EMPRESA__ = {{ (empresa or {})|tojson }};
+        window.__WORKFLOW__ = {{ workflow | tojson }};
+        window.__EMPRESA__ = {{ (empresa or { })| tojson }};
         window.__READ_ONLY__ = true;
-        window.__THEME__ = {{ theme|tojson }};
-        window.__THEME_OPTIONS__ = {{ theme_options|tojson }};
-        (function(){
-            try{
+        window.__THEME__ = {{ theme | tojson }};
+        window.__THEME_OPTIONS__ = {{ theme_options | tojson }};
+        (function () {
+            try {
                 var wf = window.__WORKFLOW__ || {};
                 var emp = window.__EMPRESA__ || {};
-                if(!wf || !wf.id || !emp || !emp.nome) return;
-                var slug = (emp.nome||'').toString()
-                    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
-                    .toLowerCase().replace(/[^a-z0-9]+/g,'-')
-                    .replace(/(^-|-$)/g,'') || 'empresa';
+                if (!wf || !wf.id || !emp || !emp.nome) return;
+                var slug = (emp.nome || '').toString()
+                    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                    .toLowerCase().replace(/[^a-z0-9]+/g, '-')
+                    .replace(/(^-|-$)/g, '') || 'empresa';
                 var current = window.location.pathname;
                 var desired = '/empresas/' + slug + '/' + wf.id + '/dashboards/visualizar';
-                if(/^\/workflows\/\d+\/dashboards\/visualizar\/?$/.test(current) && current !== desired){
+                if (/^\/workflows\/\d+\/dashboards\/visualizar\/?$/.test(current) && current !== desired) {
                     window.history.replaceState({}, document.title, desired + window.location.search + window.location.hash);
                 }
-            }catch(e){ console.warn('Nao foi possivel ajustar URL amigavel dos dashboards visualizar:', e); }
+            } catch (e) { console.warn('Nao foi possivel ajustar URL amigavel dos dashboards visualizar:', e); }
         })();
     </script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
     <script src="{{ url_for('static', filename='js/workflow_charts.js') }}"></script>
     <script>
         // Ocultar/neutralizar aÃ§Ãµes de ediÃ§Ã£o/exclusÃ£o caso renderizadas pelo JS de grÃ¡ficos
-        document.addEventListener('DOMContentLoaded', function(){
+        document.addEventListener('DOMContentLoaded', function () {
             var btn = document.getElementById('openChartModal');
             if (btn) btn.remove();
         });
-        window.editChart = function(){ return false; };
-        window.deleteChart = function(){ return false; };
-        
+        window.editChart = function () { return false; };
+        window.deleteChart = function () { return false; };
+
         // ====== Layout (somente nesta view de visualização) ======
-        (function(){
+        (function () {
             const wf = window.__WORKFLOW__ || {};
             const key = `wf_layout_${wf.id}`;
             const chartGrid = document.getElementById('chartGrid');
 
-            function readLayout(){ try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch { return null; } }
-            function applyLayout(){
+            function readLayout() { try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch { return null; } }
+            function applyLayout() {
                 const cfg = readLayout();
                 if (!cfg || !chartGrid) return;
                 chartGrid.classList.remove('space-y-6');
-                chartGrid.classList.add('grid','gap-6','grid-cols-1');
-                chartGrid.classList.remove('md:grid-cols-2','md:grid-cols-3');
+                chartGrid.classList.add('grid', 'gap-6', 'grid-cols-1');
+                chartGrid.classList.remove('md:grid-cols-2', 'md:grid-cols-3');
                 if (cfg.cols === 2) chartGrid.classList.add('md:grid-cols-2');
                 if (cfg.cols === 3) chartGrid.classList.add('md:grid-cols-3');
                 if (Array.isArray(cfg.order) && cfg.order.length) {
@@ -207,18 +229,18 @@
             const colsSel = document.getElementById('layoutCols');
             const listEl = document.getElementById('layoutChartList');
             const closeEls = modal.querySelectorAll('[data-layout-close],[data-layout-cancel]');
-            function open(){ modal.classList.remove('hidden'); populate(); }
-            function close(){ modal.classList.add('hidden'); }
+            function open() { modal.classList.remove('hidden'); populate(); }
+            function close() { modal.classList.add('hidden'); }
             closeEls.forEach(el => el.addEventListener('click', close));
             if (openBtn) openBtn.addEventListener('click', open);
 
-            async function fetchCharts(){
+            async function fetchCharts() {
                 const { apiRequest } = window.dashboardUtils || {};
                 if (!apiRequest || !wf.id) return [];
                 try { const res = await apiRequest(`/api/workflows/${wf.id}/dashboards`, 'GET'); return Array.isArray(res?.charts) ? res.charts : []; } catch { return []; }
             }
 
-            function makeRow(item){
+            function makeRow(item) {
                 const id = item.id;
                 const name = item?.config?.nome || item?.chart?.nome || item?.nome || `Gráfico ${id}`;
                 const li = document.createElement('li');
@@ -234,13 +256,13 @@
                 return li;
             }
 
-            function reorder(li, dir){
+            function reorder(li, dir) {
                 if (!li || !li.parentElement) return;
                 if (dir === 'up' && li.previousElementSibling) li.parentElement.insertBefore(li, li.previousElementSibling);
                 if (dir === 'down' && li.nextElementSibling) li.parentElement.insertBefore(li.nextElementSibling, li);
             }
 
-            async function populate(){
+            async function populate() {
                 listEl.innerHTML = '<li class="px-3 py-2 text-sm opacity-60">Carregando...</li>';
                 const items = await fetchCharts();
                 const cfg = readLayout();
@@ -277,7 +299,7 @@
                     if (cb && cb.checked) order.push(Number(li.getAttribute('data-id')));
                 });
                 const cfg = { cols, order };
-                try { localStorage.setItem(key, JSON.stringify(cfg)); } catch {}
+                try { localStorage.setItem(key, JSON.stringify(cfg)); } catch { }
                 close();
                 applyLayout();
             });
@@ -286,6 +308,5 @@
         })();
     </script>
 </body>
+
 </html>
-
-
